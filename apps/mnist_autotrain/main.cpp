@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <iostream>
 
 using namespace tiny_dnn;
+using namespace tiny_dnn::layers;
 using namespace tiny_dnn::activation;
 
 static void construct_net(  network<sequential> &nn, core::backend_t backend_type )
@@ -37,26 +38,19 @@ static void construct_net(  network<sequential> &nn, core::backend_t backend_typ
     // S : sub-sampling
     // F : fully connected
     // clang-format off
-    nn  << convolutional_layer( 32, 32, 5, 1, 6,   // C1, 1@32x32-in, 6@28x28-out
-                                padding::valid, true, 1, 1, backend_type )
-        << tanh_layer()
-        << average_pooling_layer( 28, 28, 6, 2)    // S2, 6@28x28-in, 6@14x14-out
-        << tanh_layer()
-        << convolutional_layer( 14, 14, 5, 6, 16,  // C3, 6@14x14-in, 16@10x10-out
-                                padding::valid, true, 1, 1, backend_type )
-        << tanh_layer()
-        << average_pooling_layer( 10, 10, 16, 2)   // S4, 16@10x10-in, 16@5x5-out
-        << tanh_layer()
-        << convolutional_layer( 5, 5, 5, 16, 120,  // C5, 16@5x5-in, 120@1x1-out
-                                padding::valid, true, 1, 1, backend_type )
-        << tanh_layer()
-        << fully_connected_layer(   120, 10, true,   // F6, 120-in, 10-out
-                                    backend_type)
-        << tanh_layer();
+    nn  << conv( 32, 32, 5, 1, 12 ) << relu() // C1, 1@32x32-in, 12@28x28-out
+        << max_pool( 28, 28, 12, 2 ) // S2, 12@28x28-in, 12@14x14-out
+        << conv( 14, 14, 5, 12, 25 ) << relu() // C3, 12@14x14-in, 25@10x10-out
+        << max_pool( 10, 10, 25, 2 ) // S4, 25@10x10-in, 25@5x5-out
+        << fc( 625, 180 ) << relu() // F5, 625-in, 180-out
+        << dropout( 180, 0.5f )
+        << fc( 180, 100 ) << relu() // F6, 180-in, 100-out
+        << dropout( 100, 0.5f )
+        << fc( 100, 10 ) << softmax_layer(10); // F7, 100-in, 10-out
     // clang-format on
 }
 
-static void train_lenet(    const std::string &data_dir_path,
+static void train_mnist(    const std::string &data_dir_path,
                             double learning_rate,
                             const int n_train_epochs,
                             const int n_minibatch,
@@ -84,8 +78,8 @@ static void train_lenet(    const std::string &data_dir_path,
     progress_display disp( train_images.size() );
     timer t;
 
-    optimizer.alpha *= std::min( tiny_dnn::float_t(4),
-        static_cast<tiny_dnn::float_t>( sqrt( n_minibatch ) * learning_rate ) );
+    //optimizer.alpha *= std::min( tiny_dnn::float_t(4),
+    //    static_cast<tiny_dnn::float_t>( sqrt( n_minibatch ) * learning_rate ) );
 
     int epoch = 1;
 
@@ -94,7 +88,7 @@ static void train_lenet(    const std::string &data_dir_path,
         std::cout << "Epoch " << epoch << "/" << n_train_epochs << " finished. "
             << t.elapsed() << "s elapsed." << std::endl;
         ++epoch;
-        tiny_dnn::result res = nn.test(test_images, test_labels);
+        tiny_dnn::result res = nn.test( test_images, test_labels );
         std::cout << res.num_success << "/" << res.num_total << std::endl;
 
         disp.restart( train_images.size() );
@@ -104,7 +98,7 @@ static void train_lenet(    const std::string &data_dir_path,
     auto on_enumerate_minibatch = [&]() { disp += n_minibatch; };
 
     // training
-    nn.train<mse>( optimizer, train_images, train_labels, n_minibatch,
+    nn.train<cross_entropy_multiclass>( optimizer, train_images, train_labels, n_minibatch,
         n_train_epochs, on_enumerate_minibatch, on_enumerate_epoch );
 
     std::cout << "end training." << std::endl;
@@ -112,7 +106,7 @@ static void train_lenet(    const std::string &data_dir_path,
     // test and show results
     nn.test( test_images, test_labels ).print_detail( std::cout );
     // save network model & trained weights
-    nn.save( "LeNet-model" );
+    nn.save( "kaggle-mnist-model" );
 }
 
 static core::backend_t parse_backend_name( const std::string &name )
@@ -134,7 +128,7 @@ static void usage( const char *argv0 )
     std::cout   << "Usage: " << argv0 << " --data_path path_to_dataset_folder"
                 << " --learning_rate 1"
                 << " --epochs 30"
-                << " --minibatch_size 16"
+                << " --minibatch_size 128"
                 << " --backend_type internal" << std::endl;
 }
 
@@ -143,7 +137,7 @@ int main( int argc, char **argv )
     double learning_rate         = 1;
     int epochs                   = 30;
     std::string data_path        = "";
-    int minibatch_size           = 16;
+    int minibatch_size           = 128;
     core::backend_t backend_type = core::default_engine();
 
     if ( argc == 2 )
@@ -215,7 +209,7 @@ int main( int argc, char **argv )
                 << std::endl;
     try
     {
-        train_lenet( data_path, learning_rate, epochs, minibatch_size, backend_type );
+        train_mnist( data_path, learning_rate, epochs, minibatch_size, backend_type );
     }
     catch( tiny_dnn::nn_error &err )
     {
