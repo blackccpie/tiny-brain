@@ -30,6 +30,39 @@ using namespace tiny_dnn;
 using namespace tiny_dnn::layers;
 using namespace tiny_dnn::activation;
 
+struct adamax : public stateful_optimizer<2> {
+  adamax()
+    : alpha(float_t(0.002f)),
+      b1(float_t(0.9f)),
+      b2(float_t(0.999f)),
+      b1_t(b1),
+      eps(float_t(1e-8f)) {}
+
+  void update(const vec_t &dW, vec_t &W, bool parallelize) {
+    vec_t &mt = get<0>(W);
+    vec_t &vt = get<1>(W);
+
+    b1_t *= b1;
+
+    for_i(parallelize, static_cast<int>(W.size()), [&](int i) {
+      mt[i] = b1 * mt[i] + (float_t(1) - b1) * dW[i];
+      vt[i] = std::max( b2 * vt[i], std::abs( dW[i] ) );
+
+      W[i] -= alpha * ( mt[i] / (float_t(1) - b1_t)) /
+              ( vt[i] + eps);
+    });
+  }
+
+  float_t alpha;  // learning rate
+  float_t b1;     // decay term
+  float_t b2;     // decay term
+  float_t b1_t;   // decay term power t
+
+ private:
+  float_t eps;  // constant value to avoid zero-division
+};
+
+
 static void construct_net(  network<sequential> &nn, core::backend_t backend_type )
 {
     // construct nets
@@ -58,7 +91,7 @@ static void train_mnist(    const std::string &data_dir_path,
 {
     // specify loss-function and learning strategy
     network<sequential> nn;
-    adagrad optimizer;
+    adamax optimizer;
 
     construct_net( nn, backend_type );
 
@@ -78,6 +111,7 @@ static void train_mnist(    const std::string &data_dir_path,
     progress_display disp( train_images.size() );
     timer t;
 
+    // What is this for?
     //optimizer.alpha *= std::min( tiny_dnn::float_t(4),
     //    static_cast<tiny_dnn::float_t>( sqrt( n_minibatch ) * learning_rate ) );
 
