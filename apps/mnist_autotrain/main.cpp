@@ -24,44 +24,13 @@ THE SOFTWARE.
 
 #include "tiny_dnn/tiny_dnn.h"
 
+#include "adamax.h"
+
 #include <iostream>
 
 using namespace tiny_dnn;
 using namespace tiny_dnn::layers;
 using namespace tiny_dnn::activation;
-
-struct adamax : public stateful_optimizer<2> {
-  adamax()
-    : alpha(float_t(0.002f)),
-      b1(float_t(0.9f)),
-      b2(float_t(0.999f)),
-      b1_t(b1),
-      eps(float_t(1e-8f)) {}
-
-  void update(const vec_t &dW, vec_t &W, bool parallelize) {
-    vec_t &mt = get<0>(W);
-    vec_t &vt = get<1>(W);
-
-    b1_t *= b1;
-
-    for_i(parallelize, static_cast<int>(W.size()), [&](int i) {
-      mt[i] = b1 * mt[i] + (float_t(1) - b1) * dW[i];
-      vt[i] = std::max( b2 * vt[i], std::abs( dW[i] ) );
-
-      W[i] -= alpha * ( mt[i] / (float_t(1) - b1_t)) /
-              ( vt[i] + eps);
-    });
-  }
-
-  float_t alpha;  // learning rate
-  float_t b1;     // decay term
-  float_t b2;     // decay term
-  float_t b1_t;   // decay term power t
-
- private:
-  float_t eps;  // constant value to avoid zero-division
-};
-
 
 static void construct_net(  network<sequential> &nn, core::backend_t backend_type )
 {
@@ -81,10 +50,12 @@ static void construct_net(  network<sequential> &nn, core::backend_t backend_typ
         << dropout( 100, 0.5f )
         << fc( 100, 10 ) << softmax_layer(10); // F7, 100-in, 10-out
     // clang-format on
+
+    nn.weight_init( weight_init::he() );
+    nn.bias_init( weight_init::he() );
 }
 
 static void train_mnist(    const std::string &data_dir_path,
-                            double learning_rate,
                             const int n_train_epochs,
                             const int n_minibatch,
                             core::backend_t backend_type )
@@ -143,34 +114,15 @@ static void train_mnist(    const std::string &data_dir_path,
     nn.save( "kaggle-mnist-model" );
 }
 
-static core::backend_t parse_backend_name( const std::string &name )
-{
-    const std::array<const std::string, 5> names =
-    {
-        "internal", "nnpack", "libdnn", "avx", "opencl",
-    };
-    for ( size_t i = 0; i < names.size(); ++i )
-    {
-        if ( name.compare(names[i]) == 0 )
-            return static_cast<core::backend_t>(i);
-    }
-    return core::default_engine();
-}
-
 static void usage( const char *argv0 )
 {
-    std::cout   << "Usage: " << argv0 << " --data_path path_to_dataset_folder"
-                << " --learning_rate 1"
-                << " --epochs 30"
-                << " --minibatch_size 128"
-                << " --backend_type internal" << std::endl;
+    std::cout   << "Usage: " << argv0 << " --data_path path_to_dataset_folder" << std::endl;
 }
 
 int main( int argc, char **argv )
 {
-    double learning_rate         = 1;
-    int epochs                   = 30;
     std::string data_path        = "";
+    int epochs                   = 30;
     int minibatch_size           = 128;
     core::backend_t backend_type = core::default_engine();
 
@@ -183,67 +135,33 @@ int main( int argc, char **argv )
             return 0;
         }
     }
-    for ( int count = 1; count + 1 < argc; count += 2 )
+    else if ( argc == 4 )
     {
-        std::string argname(argv[count]);
-        if ( argname == "--learning_rate" )
+        std::string argname(argv[3]);
+        if ( argname == "--data_path" )
         {
-            learning_rate = atof(argv[count + 1]);
-        }
-        else if ( argname == "--epochs" )
-        {
-            epochs = atoi(argv[count + 1]);
-        }
-        else if ( argname == "--minibatch_size" )
-        {
-            minibatch_size = atoi( argv[count + 1] );
-        }
-        else if ( argname == "--backend_type" )
-        {
-            backend_type = parse_backend_name( argv[count + 1] );
-        }
-        else if ( argname == "--data_path" )
-        {
-            data_path = std::string( argv[count + 1] );
-        }
-        else
-        {
-            std::cerr << "Invalid parameter specified - \"" << argname << "\"" << std::endl;
-            usage( argv[0] );
-            return -1;
+            data_path = std::string( argv[4] );
         }
     }
+    else
+    {
+        std::cerr << "Invalid command line" << std::endl;
+        usage( argv[0] );
+        return -1;
+    }
+
     if ( data_path == "" )
     {
         std::cerr << "Data path not specified." << std::endl;
         usage( argv[0] );
         return -1;
     }
-    if ( learning_rate <= 0 )
-    {
-        std::cerr << "Invalid learning rate. The learning rate must be greater than 0." << std::endl;
-        return -1;
-    }
-    if ( epochs <= 0 )
-    {
-        std::cerr << "Invalid number of epochs. The number of epochs must be greater than 0." << std::endl;
-        return -1;
-    }
-    if ( minibatch_size <= 0 || minibatch_size > 60000 )
-    {
-        std::cerr << "Invalid minibatch size. The minibatch size must be greater than 0 and less than dataset size (60000)." << std::endl;
-        return -1;
-    }
     std::cout   << "Running with the following parameters:" << std::endl
                 << "Data path: " << data_path << std::endl
-                << "Learning rate: " << learning_rate << std::endl
-                << "Minibatch size: " << minibatch_size << std::endl
-                << "Number of epochs: " << epochs << std::endl
-                << "Backend type: " << backend_type << std::endl
                 << std::endl;
     try
     {
-        train_mnist( data_path, learning_rate, epochs, minibatch_size, backend_type );
+        train_mnist( data_path, epochs, minibatch_size, backend_type );
     }
     catch( tiny_dnn::nn_error &err )
     {
