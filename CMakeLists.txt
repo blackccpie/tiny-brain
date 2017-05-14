@@ -28,6 +28,33 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag("-msse3" COMPILER_HAS_SSE_FLAG)
+check_cxx_compiler_flag("-mavx"  COMPILER_HAS_AVX_FLAG)
+check_cxx_compiler_flag("-mavx2" COMPILER_HAS_AVX2_FLAG)
+check_cxx_compiler_flag("-mfma" COMPILER_HAS_AVX2_FLAG)
+
+# set Streaming SIMD Extension (SSE) instructions
+if(USE_SSE AND COMPILER_HAS_SSE_FLAG)
+    add_definitions(-DCNN_USE_SSE)
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -msse3")
+endif(USE_SSE AND COMPILER_HAS_SSE_FLAG)
+# set Advanced Vector Extensions (AVX)
+if(USE_AVX AND COMPILER_HAS_AVX_FLAG)
+    add_definitions(-DCNN_USE_AVX)
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -mavx")
+endif(USE_AVX AND COMPILER_HAS_AVX_FLAG)
+# set Advanced Vector Extensions 2 (AVX2)
+if(USE_AVX2 AND COMPILER_HAS_AVX2_FLAG)
+    add_definitions(-DCNN_USE_AVX2)
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -mavx2 -mfma -march=core-avx2")
+endif(USE_AVX2 AND COMPILER_HAS_AVX2_FLAG)
+
+# Set compiler options
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${EXTRA_C_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${EXTRA_C_FLAGS_DEBUG}")
+
 include_directories(
     "${CMAKE_SOURCE_DIR}/tiny-dnn"
 )
