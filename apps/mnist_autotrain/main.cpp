@@ -135,12 +135,12 @@ int main( int argc, char **argv )
             return 0;
         }
     }
-    else if ( argc == 4 )
+    else if ( argc == 3 )
     {
-        std::string argname(argv[3]);
+        std::string argname(argv[1]);
         if ( argname == "--data_path" )
         {
-            data_path = std::string( argv[4] );
+            data_path = std::string( argv[2] );
         }
     }
     else
