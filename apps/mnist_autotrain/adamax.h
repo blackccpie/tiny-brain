@@ -42,8 +42,6 @@ namespace tiny_dnn {
         vec_t &mt = get<0>(W);
         vec_t &vt = get<1>(W);
 
-        b1_t *= b1;
-
         for_i(parallelize, static_cast<int>(W.size()), [&](int i) {
           mt[i] = b1 * mt[i] + (float_t(1) - b1) * dW[i];
           vt[i] = std::max( b2 * vt[i], std::abs( dW[i] ) );
@@ -51,6 +49,8 @@ namespace tiny_dnn {
           W[i] -= alpha * ( mt[i] / (float_t(1) - b1_t)) /
                   ( vt[i] + eps);
         });
+
+        b1_t *= b1;
       }
 
       float_t alpha;  // learning rate
