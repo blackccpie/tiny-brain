@@ -28,6 +28,10 @@ THE SOFTWARE.
 #include <cassert>
 #include <vector>
 
+#define tinymage_for1(bound,i) for (std::size_t i = 0UL; i<bound; ++i)
+#define tinymage_forX(img,x) tinymage_for1( img.width(), x )
+#define tinymage_forY(img,y) tinymage_for1( img.height(), y )
+
 template<typename T=float>
 class tinymage final : private std::vector<T>
 {
@@ -43,6 +47,11 @@ public:
 
     std::size_t width() const { return m_width; }
     std::size_t height() const { return m_height; }
+
+    T& operator[]( std::size_t i )
+    {
+        return at( i );
+    }
 
     T& at( std::size_t x, std::size_t y )
     {
@@ -67,6 +76,33 @@ public:
             });
 
         return output;
+    }
+
+    void normalize( T min, T max )
+    {
+        assert( max > min );
+
+        auto cur_min = *std::min_element( begin(), end() );
+        auto cur_max = *std::max_element( begin(), end() );
+        double cur_dyn = cur_max - cur_min;
+        double out_dyn = max - min;
+
+        std::for_each( begin(), end(), [&]( T& val )
+            {
+                val = min + ( out_dyn * ( val - cur_min ) / cur_dyn );
+            });
+    }
+
+    T mean() const
+    {
+        double sum;
+
+        std::for_each( begin(), end(), [&]( const T& val )
+            {
+                sum += val;
+            });
+
+        return static_cast<T>( sum / ( m_width * m_height ) );
     }
 
     void threshold( T thresh )
