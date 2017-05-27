@@ -24,10 +24,10 @@ THE SOFTWARE.
 
 #include "ocr.h"
 
-//#include "autothreshold.h"
 //#include "edge_detect.h"
 
-#include "tinymage.h"
+#include "tiny_brain/tinymage.h"
+#include "tiny_brain/autothreshold.h"
 
 #include <iostream>
 
@@ -37,30 +37,24 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input );
 void compute_ranges( const tinymage<float>& input, std::vector<t_digit_interval>& number_intervals );
 void center_number( tinymage<float>& input );
 
+using namespace tiny_dnn;
+
 class ocr_helper::ocr_helper_impl
 {
 public:
-    ocr_helper_impl( /*std::shared_ptr<network_manager_interface> net_manager*/ )
-        /*: m_net_manager( net_manager )*/ {}
-    virtual ~ocr_helper_impl() = default;
+    ocr_helper_impl( network<sequential>& net_manager )
+        : m_net_manager( net_manager ) {}
 
-    template<typename T>
-    void process( const T* input, const int sizeX, const int sizeY )
+    void process( const tinymage<float>& img )
     {
-        // // Copy cast to float image
-        // const CImg<float> _input( CImg<T>( input, sizeX, sizeY, 1, 1, true /*shared*/) );
-        //
-        // m_cropped_numbers = get_cropped_numbers( _input );
-        //
-        // m_cropped_numbers.normalize( 0, 255 );
-        //
-        // auto_threshold( m_cropped_numbers.data(), m_cropped_numbers.width(), m_cropped_numbers.height() );
-        //
-        // //m_cropped_numbers.display();
-        //
-        // std::vector<t_digit_interval> number_intervals;
-        // compute_ranges( m_cropped_numbers, number_intervals );
-        //
+        m_cropped_numbers = get_cropped_numbers( img );
+        m_cropped_numbers.normalize( 0.f, 255.f );
+        m_cropped_numbers.auto_threshold();
+        //m_cropped_numbers.display();
+
+        std::vector<t_digit_interval> number_intervals;
+        compute_ranges( m_cropped_numbers, number_intervals );
+
         // std::shared_ptr<samples_augmenter> smp_augmenter = std::make_shared<samples_augmenter>( 28, 28 );
         //
         // float output[10] = { 0.f };
@@ -94,8 +88,7 @@ public:
         std::cout << "ocr_helper::process - ended inferring numbers on detected intervals" << std::endl;
     }
 
-    template<typename imageT>
-    const imageT& cropped_numbers()
+    const tinymage<float>& cropped_numbers()
     {
         return m_cropped_numbers;
     }
@@ -116,30 +109,28 @@ private:
 
     std::vector<ocr_helper::reco> m_recognitions;
     tinymage<float> m_cropped_numbers;
-    //std::shared_ptr<network_manager_interface> m_net_manager;
+    network<sequential>& m_net_manager;
 };
 
-ocr_helper::ocr_helper( /*std::shared_ptr<network_manager_interface> net_manager*/ )
-    : m_pimpl( new ocr_helper_impl( /*net_manager*/ ) )
+ocr_helper::ocr_helper( network<sequential>& net_manager )
+    : m_pimpl( new ocr_helper_impl( net_manager ) )
 {
 }
 
-template<typename T>
-void ocr_helper::process( const T* input, const int sizeX, const int sizeY )
+ocr_helper::~ocr_helper()
 {
-    m_pimpl->process( input, sizeX, sizeY );
+    // https://stackoverflow.com/questions/9954518/stdunique-ptr-with-an-incomplete-type-wont-compile
 }
 
-template void ocr_helper::process<unsigned char>( const unsigned char* input, const int sizeX, const int sizeY );
-template void ocr_helper::process<float>( const float* input, const int sizeX, const int sizeY );
-
-template<typename imageT>
-const imageT& ocr_helper::cropped_numbers()
+void ocr_helper::process( const tinymage<float>& img )
 {
-    return m_pimpl->cropped_numbers<imageT>();
+    m_pimpl->process( img );
 }
 
-template const tinymage<float>& ocr_helper::cropped_numbers<tinymage<float>>();
+const tinymage<float>& ocr_helper::cropped_numbers()
+{
+    return m_pimpl->cropped_numbers();
+}
 
 const std::vector<ocr_helper::reco>& ocr_helper::recognitions()
 {
@@ -229,8 +220,8 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     stopY += margin;
 
     // check boundaries
-    startX = std::max( startX, 0UL );
-    startY = std::max( startY, 0UL );
+    startX = std::max( startX, std::size_t(0) );
+    startY = std::max( startY, std::size_t(0) );
     stopX = std::min( stopX, input.width()-1 );
     stopY = std::min( stopY, input.height()-1 );
 

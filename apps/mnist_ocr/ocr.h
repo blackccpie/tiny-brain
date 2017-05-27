@@ -24,8 +24,10 @@ THE SOFTWARE.
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include "tiny_dnn/tiny_dnn.h"
+
+template <typename T>
+class tinymage;
 
 class ocr_helper
 {
@@ -39,14 +41,12 @@ public:
     };
 
 public:
-    ocr_helper( /*std::shared_ptr<neurocl::network_manager_interface> net_manager*/ );
-    virtual ~ocr_helper() = default;
+    ocr_helper( tiny_dnn::network<tiny_dnn::sequential>& net_manager );
+    virtual ~ocr_helper(); // Implement (with an empty body) where pimpl is complete
 
-    template<typename T>
-    void process( const T* input, const int sizeX, const int sizeY );
+    void process( const tinymage<float>& img );
 
-    template<typename imageT>
-    const imageT& cropped_numbers();
+    const tinymage<float>& cropped_numbers();
 
     const std::vector<reco>& recognitions();
     std::string reco_string();

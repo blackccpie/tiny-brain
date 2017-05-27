@@ -22,19 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "tiny_brain/tinymage.h"
+
+#include "ocr.h"
+
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
-
-#include "tinymage.h"
 
 int main( int argc, char **argv )
 {
 #ifdef __EMSCRIPTEN__
 #else
 int width, height, bpp;
-uint8_t* gray_image = stbi_load("/home/blackccpie/Images/numbers.png", &width, &height, &bpp, 1);
+auto gray_image = stbi_load("/home/blackccpie/Images/numbers.png", &width, &height, &bpp, 1);
 
 std::cout << width << " " << height << " " << bpp << std::endl;
 
@@ -43,5 +45,16 @@ img.display();
 
 stbi_image_free(gray_image);
 #endif
+
+    using namespace tiny_dnn;
+    network<sequential> nn;
+    nn.load( "kaggle-mnist-model" );
+
+    ocr_helper ocr_h( nn );
+    ocr_h.process( img );
+
+    auto& cropped_numbers = ocr_h.cropped_numbers();
+    cropped_numbers.display();
+
     return 0;
 }

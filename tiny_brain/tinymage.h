@@ -42,6 +42,7 @@ class tinymage final : private std::vector<T>
     using std::vector<T>::at;
     using std::vector<T>::assign;
     using std::vector<T>::data;
+    using std::vector<T>::size;
 
 public:
     using std::vector<T>::begin;
@@ -95,6 +96,9 @@ public:
 
         auto cur_min = *std::min_element( begin(), end() );
         auto cur_max = *std::max_element( begin(), end() );
+
+        assert( cur_max > cur_min );
+
         double cur_dyn = cur_max - cur_min;
         double out_dyn = max - min;
 
@@ -133,8 +137,8 @@ public:
         assert( stopy >= starty );
 
         tinymage<T> output( stopx-startx, stopy-starty );
-        for ( auto yin = starty,yout = 0UL; yin<stopy; yin++, yout++ )
-            for ( auto xin = startx,xout = 0UL; xin<stopx; xin++, xout++ )
+        for ( auto yin = starty,yout = std::size_t(0); yin<stopy; yin++, yout++ )
+            for ( auto xin = startx,xout = std::size_t(0); xin<stopx; xin++, xout++ )
                 output.at(xout,yout) = c_at(xin,yin);
 
         return output;
@@ -180,7 +184,13 @@ public:
         return output;
     }
 
-    void display()
+    void auto_threshold()
+    {
+        //int threshold = default_isodata( _input.get_histogram(256), 256 );
+        //_input.threshold( threshold );
+    }
+
+    void display() const
     {
 #ifdef USE_CIMG
         cimg_library::CImg<T> cimg( data(), m_width, m_height, 1, 1, true/*shared*/ );
@@ -188,6 +198,18 @@ public:
 #else
         // NOT IMPLEMENTED YET
 #endif
+    }
+
+private:
+
+    int default_isodata()
+    {
+        return isodata();
+    }
+
+    int isodata()
+    {
+        return 0;
     }
 
 private:
