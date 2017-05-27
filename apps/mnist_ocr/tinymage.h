@@ -28,6 +28,10 @@ THE SOFTWARE.
 #include <cassert>
 #include <vector>
 
+#ifdef USE_CIMG
+    #include <CImg.h>
+#endif
+
 #define tinymage_for1(bound,i) for (std::size_t i = 0UL; i<bound; ++i)
 #define tinymage_forX(img,x) tinymage_for1( img.width(), x )
 #define tinymage_forY(img,y) tinymage_for1( img.height(), y )
@@ -36,6 +40,8 @@ template<typename T=float>
 class tinymage final : private std::vector<T>
 {
     using std::vector<T>::at;
+    using std::vector<T>::assign;
+    using std::vector<T>::data;
 
 public:
     using std::vector<T>::begin;
@@ -44,6 +50,11 @@ public:
 public:
     tinymage() : m_width{0}, m_height{0} {}
     tinymage( std::size_t sx, std::size_t sy, T val = 0 ) : std::vector<T>( sx*sy, val ), m_width{sx}, m_height{sy} {}
+    tinymage( uint8_t* buf, std::size_t sx, std::size_t sy, std::size_t bpp ) : m_width{sx}, m_height{sy}
+    {
+        assert( bpp == sizeof(T) );
+        assign( buf, buf + sx*sy );
+    }
 
     std::size_t width() const { return m_width; }
     std::size_t height() const { return m_height; }
@@ -129,6 +140,14 @@ public:
         return output;
     }
 
+    void crop(  std::size_t startx,
+                std::size_t starty,
+                std::size_t stopx,
+                std::size_t stopy )
+    {
+        *this = get_crop( startx, starty, stopx, stopy );
+    }
+
     tinymage<T> line_sums() const
     {
         tinymage<T> output( 1, m_height, 0.f );
@@ -159,6 +178,16 @@ public:
             });
 
         return output;
+    }
+
+    void display()
+    {
+#ifdef USE_CIMG
+        cimg_library::CImg<T> cimg( data(), m_width, m_height, 1, 1, true/*shared*/ );
+        cimg.display();
+#else
+        // NOT IMPLEMENTED YET
+#endif
     }
 
 private:
