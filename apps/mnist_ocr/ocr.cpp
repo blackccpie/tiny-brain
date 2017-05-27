@@ -27,7 +27,6 @@ THE SOFTWARE.
 //#include "edge_detect.h"
 
 #include "tiny_brain/tinymage.h"
-#include "tiny_brain/autothreshold.h"
 
 #include <iostream>
 
@@ -147,13 +146,13 @@ std::string ocr_helper::reco_string()
 tinymage<float> get_cropped_numbers( const tinymage<float>& input )
 {
     tinymage<unsigned char> work( input.convert<unsigned char>() );
-    tinymage<unsigned char> work_edge( work );
 
-    // sobel_ccv::process<unsigned char>( work, work_edge );
+    // TODO : works on normalized 0...1 for now...
+    tinymage<unsigned char> work_edge;// = work.get_sobel();
 
     work_edge.normalize( 0, 255 );
 
-    //std::cout << "ocr_helper::get_cropped_numbers - image mean value is " << work_edge.mean() << " , noise variance is " << work_edge.variance_noise() << std::endl;
+    std::cout << "ocr_helper::get_cropped_numbers - image mean value is " << work_edge.mean() << std::endl; // TODO " , noise variance is " << work_edge.variance_noise() << std::endl;
 
     // if ( work_edge.variance_noise() > 10.f )
     // {
@@ -172,7 +171,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     // Compute line sums image
     tinymage<float> line_sums( work_edge.line_sums().convert<float>() );
     line_sums.threshold( 5.f );
-    // //line_sums.display();
+    //line_sums.display();
 
     // Compute extraction coords
     std::size_t startX = 0;

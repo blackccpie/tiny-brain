@@ -26,7 +26,7 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-if (EXISTS "${CMAKE_SOURCE_DIR}/../CImg/CImg.h")
+if (NOT USE_EMSCRIPTEN AND EXISTS "${CMAKE_SOURCE_DIR}/../CImg/CImg.h")
     message("CImg header found")
     set(CIMG_FOUND TRUE)
     add_definitions( -DUSE_CIMG )

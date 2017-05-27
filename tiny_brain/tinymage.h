@@ -25,7 +25,9 @@ THE SOFTWARE.
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cmath>
 #include <vector>
 
 #ifdef USE_CIMG
@@ -184,10 +186,99 @@ public:
         return output;
     }
 
+    template<std::size_t nb_bins>
+    std::array<std::size_t,nb_bins> get_histogram()
+    {
+        auto min = *std::min_element( begin(), end() );
+        auto max = *std::max_element( begin(), end() );
+
+        std::array<std::size_t,nb_bins> hist;
+        std::for_each( begin(), end(), [&]( const T& val )
+            {
+                ++hist[val==max?nb_bins-1:static_cast<std::size_t>((val - min)*nb_bins/(max - min))];
+            });
+
+        return hist;
+    }
+
     void auto_threshold()
     {
-        //int threshold = default_isodata( _input.get_histogram(256), 256 );
-        //_input.threshold( threshold );
+        // One of the many autothreshold IJ implementations:
+        // https://imagej.nih.gov/ij/developer/source/ij/process/AutoThresholder.java.html
+        int thresh = _default_isodata<256>( get_histogram<256>() );
+        threshold( static_cast<T>( thresh ) );
+    }
+
+    // use with normalized [0,1] floating point images
+    tinymage<T> get_sobel()
+    {
+        // TODO
+        //static_assert( std::is_same<T,float>::value || std::is_same<T,double>::value,
+    	//       "Template type should be floating point type!" );
+
+        tinymage<T> output( m_width, m_height );
+
+    	T upper_bound = 1;
+    	T lower_bound = 0;
+    	T sum, sumX, sumY;
+
+        // Sobel Matrices Horizontal
+        T GX[3][3] = {  {   1,  0,  -1  },
+                        {   2,  0,  -2  },
+                        {   1,  0,  -1  } };
+        // Sobel Matrices Vertical
+    	T GY[3][3] = {  {   1,  2,  1   },
+                        {   0,  0,  0   },
+                        {   -1, -2, -1  } };
+
+    	/*Edge detection using Sobel Algorithm*/
+
+    	for ( auto y = std::size_t(0); y < m_height; y++ )
+    	{
+        	for( auto x = std::size_t(0); x < m_width; x++ )
+            {
+    			sumX	= 0;
+    			sumY	= 0;
+
+    			/*Image Boundaries*/
+    			if( y == 0 || y == m_height - 1 )
+    				sum = 0;
+    			else if( x == 0 || x == m_width - 1 )
+    				sum = 0;
+    			else
+    			{
+    				/*Convolution for X*/
+    				for( auto i = -1; i < 2; i++ )
+    				{
+    					for( auto j = -1; j < 2; j++ )
+    					{
+    						sumX = sumX + GX[j+1][i+1] * c_at(x+j,y+i);
+    					}
+    				}
+
+    				/*Convolution for Y*/
+    				for( auto i = -1; i < 2; i++ )
+    				{
+    					for( auto j = -1; j < 2; j++ )
+    					{
+    						sumY = sumY + GY[j+1][i+1] * c_at(x+j,y+i);
+    					}
+    				}
+
+    				/*Edge strength*/
+    				sum = std::sqrt( sumX*sumX + sumY*sumY );
+    			}
+
+    			if( sum > upper_bound ) sum = upper_bound;
+    			if( sum < lower_bound ) sum = lower_bound;
+
+        	    output.at(x,y) = sum;//( upper_bound - sum );
+
+    			//std::cout << "x " << x << " y " << y << " SUM " << image_out(x,y) << std::endl;
+    		}
+    	}
+
+        return output;
     }
 
     void display() const
@@ -201,18 +292,71 @@ public:
     }
 
 private:
-
-    int default_isodata()
-    {
-        return isodata();
-    }
-
-    int isodata()
-    {
-        return 0;
-    }
-
-private:
     std::size_t m_width;
     std::size_t m_height;
+
+private:
+
+    template<std::size_t length>
+    int _default_isodata( const std::array<std::size_t,length>& data )
+    {
+        std::array<std::size_t,length> data2;
+        std::size_t mode=0, maxCount=0;
+        for ( auto i=std::size_t(0); i<length; i++ ) {
+            data2[i] = std::round<std::size_t>( data[i] );
+            if ( data2[i]>maxCount ) {
+                maxCount = data2[i];
+                mode = i;
+            }
+        }
+        std::size_t maxCount2 = 0;
+        for ( auto i=std::size_t(0); i<length; i++ ) {
+            if ((data2[i]>maxCount2) && (i!=mode))
+                maxCount2 = data2[i];
+        }
+        auto hmax = maxCount;
+        if ( (hmax>(maxCount2*2)) && (maxCount2!=0) ) {
+            hmax = (int)(maxCount2 * 1.5);
+            data2[mode] = hmax;
+        }
+        return _isodata<length>( data2 );
+    }
+
+    template<std::size_t length>
+    int _isodata( std::array<std::size_t,length>& data )
+    {
+        // This is the original ImageJ IsoData implementation, here for backward compatibility.
+        int maxValue = length - 1;
+        double result, sum1, sum2, sum3, sum4;
+        auto count0 = data[0];
+        data[0] = 0; //set to zero so erased areas aren't included
+        auto countMax = data[maxValue];
+        data[maxValue] = 0;
+        auto min = 0;
+        while ( (data[min]==0) && (min<maxValue) )
+            min++;
+        auto max = maxValue;
+        while ((data[max]==0) && (max>0))
+            max--;
+        if (min>=max) {
+            data[0]= count0; data[maxValue]=countMax;
+            return length/2;
+        }
+        auto movingIndex = min;
+        do {
+            sum1=sum2=sum3=sum4=0.0;
+            for (int i=min; i<=movingIndex; i++) {
+                sum1 += (double)i*data[i];
+                sum2 += data[i];
+            }
+            for (int i=(movingIndex+1); i<=max; i++) {
+                sum3 += (double)i*data[i];
+                sum4 += data[i];
+            }
+            result = (sum1/sum2 + sum3/sum4)/2.0;
+            movingIndex++;
+        } while ((movingIndex+1)<=result && movingIndex<max-1);
+        data[0]= count0; data[maxValue]=countMax;
+        return std::round<int>(result);
+    }
 };

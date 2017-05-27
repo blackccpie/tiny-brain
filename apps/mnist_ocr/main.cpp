@@ -34,6 +34,7 @@ THE SOFTWARE.
 int main( int argc, char **argv )
 {
 #ifdef __EMSCRIPTEN__
+tinymage<float> img;
 #else
 int width, height, bpp;
 auto gray_image = stbi_load("/home/blackccpie/Images/numbers.png", &width, &height, &bpp, 1);
