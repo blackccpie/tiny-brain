@@ -67,6 +67,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${EXTRA_C_FLAGS_DEBUG}")
 
 include_directories(
     "${CMAKE_SOURCE_DIR}/tiny-dnn"
+	"${CMAKE_SOURCE_DIR}/tiny-dnn/third_party"
 )
 
 add_subdirectory(apps)

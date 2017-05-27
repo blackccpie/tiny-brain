@@ -29,11 +29,13 @@ if (USE_EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 --no-heap-copy --preload-file ${CMAKE_SOURCE_DIR}/tiny-dnn/data@/")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
 
-endif ()
+else ()
 
-#include_directories(
-	#"${CMAKE_SOURCE_DIR}/src"
-#)
+    if (CIMG_FOUND)
+        set(extra_link_libs X11)
+	endif ()
+
+endif ()
 
 set (sources_list
 main.cpp
@@ -44,6 +46,7 @@ add_executable(mnist_ocr ${sources_list} ${headers_list})
 
 target_link_libraries(mnist_ocr
     pthread
+    ${extra_link_libs}
 )
 
 cotire(mnist_ocr)

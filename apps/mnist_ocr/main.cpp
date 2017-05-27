@@ -22,7 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <iostream>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
+#include "tinymage.h"
+
 int main( int argc, char **argv )
 {
+#ifdef __EMSCRIPTEN__
+#else
+int width, height, bpp;
+uint8_t* gray_image = stbi_load("/home/blackccpie/Images/numbers.png", &width, &height, &bpp, 1);
+
+std::cout << width << " " << height << " " << bpp << std::endl;
+
+tinymage<float> img( gray_image, width, height, bpp );
+img.display();
+
+stbi_image_free(gray_image);
+#endif
     return 0;
 }

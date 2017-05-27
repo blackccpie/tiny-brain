@@ -285,8 +285,8 @@ void center_number( tinymage<float>& input )
     row_sums.threshold( 2.f );
     //row_sums.display();
 
-    int startX = 0;
-    int stopX = 0;
+    std::size_t startX = 0;
+    std::size_t stopX = 0;
     bool last_val = false;
     tinymage_forX( row_sums, x )
     {
@@ -310,8 +310,8 @@ void center_number( tinymage<float>& input )
     line_sums.threshold( 2.f );
     //line_sums.display();
 
-    int startY = 0;
-    int stopY = 0;
+    std::size_t startY = 0;
+    std::size_t stopY = 0;
     last_val = false;
     tinymage_forY( line_sums, y )
     {
@@ -341,10 +341,10 @@ void center_number( tinymage<float>& input )
     // try to prepare image like MNIST does:
     // http://yann.lecun.com/exdb/mnist/
 
-    //int max_dim = std::max( input.width(), input.height() );
-    int max_dim = std::max( stopX - startX, stopY - startY );
+    //std::size_t max_dim = std::max( input.width(), input.height() );
+    std::size_t max_dim = std::max( stopX - startX, stopY - startY );
 
-    // input.crop( startX, startY, stopX, stopY );
+    input.crop( startX, startY, stopX, stopY );
     // input.resize( max_dim, max_dim, -100, -100, 0, 0, 0.5f, 0.5f );
     // input.resize( 20, 20, -100, -100, 6 );
     input.normalize( 0, 255 );

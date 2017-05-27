@@ -23,9 +23,15 @@
 cmake_minimum_required (VERSION 3.5)
 
 include_directories(
-    #"${CMAKE_SOURCE_DIR}/src"
-    #"${CMAKE_SOURCE_DIR}/utils"
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+if (EXISTS "${CMAKE_SOURCE_DIR}/../CImg/CImg.h")
+    message("CImg header found")
+    set(CIMG_FOUND TRUE)
+    add_definitions( -DUSE_CIMG )
+    include_directories( "${CMAKE_SOURCE_DIR}/../CImg" )
+endif ()
+
 add_subdirectory(mnist_autotrain)
+add_subdirectory(mnist_ocr)
