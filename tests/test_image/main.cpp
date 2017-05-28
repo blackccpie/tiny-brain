@@ -24,29 +24,21 @@ THE SOFTWARE.
 
 #include "tiny_brain/tinymage.h"
 
-#include "ocr.h"
-
 #include <iostream>
 
 int main( int argc, char **argv )
 {
-#ifdef __EMSCRIPTEN__
-    tinymage<float> img;
-#else
     tinymage<float> img;
     img.load( "/home/blackccpie/Images/numbers.png" );
     img.display();
-#endif
 
-    using namespace tiny_dnn;
-    network<sequential> nn;
-    nn.load( "kaggle-mnist-model" );
+    tinymage<unsigned char> work = img.convert<unsigned char>().get_sobel();
+    work.display();
 
-    ocr_helper ocr_h( nn );
-    ocr_h.process( img );
+    work.auto_threshold();
+    work.display();
 
-    auto& cropped_numbers = ocr_h.cropped_numbers();
-    cropped_numbers.display();
+    work.save_png( "test.png" );
 
     return 0;
 }

@@ -148,7 +148,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     tinymage<unsigned char> work( input.convert<unsigned char>() );
 
     // TODO : works on normalized 0...1 for now...
-    tinymage<unsigned char> work_edge;// = work.get_sobel();
+    tinymage<unsigned char> work_edge = work.get_sobel();
 
     work_edge.normalize( 0, 255 );
 

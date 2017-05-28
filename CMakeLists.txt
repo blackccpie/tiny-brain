@@ -25,7 +25,7 @@ cmake_minimum_required (VERSION 3.5)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(${CMAKE_SOURCE_DIR}/cmake/cotire.cmake)
@@ -58,6 +58,14 @@ else ()
     	set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -mavx2 -mfma -march=core-avx2")
 	endif (USE_AVX2 AND COMPILER_HAS_AVX2_FLAG)
 
+	# CImg
+	if (EXISTS "${CMAKE_SOURCE_DIR}/../CImg/CImg.h")
+	    message("-- CImg header found")
+	    set(CIMG_FOUND TRUE)
+	    add_definitions( -DUSE_CIMG )
+	    include_directories( "${CMAKE_SOURCE_DIR}/../CImg" )
+	endif ()
+
 endif ()
 
 # Set compiler options
@@ -72,3 +80,4 @@ include_directories(
 )
 
 add_subdirectory(apps)
+add_subdirectory(tests)

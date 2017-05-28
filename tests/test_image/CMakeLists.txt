@@ -21,10 +21,24 @@
 #THE SOFTWARE.
 
 cmake_minimum_required (VERSION 3.5)
+project (test_image)
 
-include_directories(
-    "${CMAKE_CURRENT_SOURCE_DIR}"
+if (CIMG_FOUND)
+    set(extra_link_libs X11)
+endif ()
+
+set (headers_list
 )
 
-add_subdirectory(mnist_autotrain)
-add_subdirectory(mnist_ocr)
+set (sources_list
+main.cpp
+)
+
+add_executable(test_image ${sources_list} ${headers_list})
+
+target_link_libraries(test_image
+pthread
+${extra_link_libs}
+)
+
+cotire(test_image)
