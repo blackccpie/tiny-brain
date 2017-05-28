@@ -154,6 +154,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
 
     std::cout << "ocr_helper::get_cropped_numbers - image mean value is " << work_edge.mean() << std::endl; // TODO " , noise variance is " << work_edge.variance_noise() << std::endl;
 
+    // TODO
     // if ( work_edge.variance_noise() > 10.f )
     // {
     // 	work_edge.erode( 3 );
@@ -340,15 +341,15 @@ void center_number( tinymage<float>& input )
     input.normalize( 0, 255 );
 
     // compute center of mass
-    int massX = 0;
-    int massY = 0;
-    int num = 0;
-    // cimg_forXY( input, x, y )
-    // {
-    //     massX += input( x, y ) * x;
-    //     massY += input( x, y ) * y;
-    //     num += input( x, y );
-    // }
+    std::size_t massX = 0;
+    std::size_t massY = 0;
+    std::size_t num = 0;
+    tinymage_forXY( input, x, y )
+    {
+        massX += input.at( x, y ) * x;
+        massY += input.at( x, y ) * y;
+        num += input.at( x, y );
+    }
     massX /= num;
     massY /= num;
 

@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <string>
 #include <vector>
 
 #ifdef USE_CIMG
@@ -47,6 +48,7 @@ THE SOFTWARE.
 #define tinymage_for1(bound,i) for (std::size_t i = 0UL; i<bound; ++i)
 #define tinymage_forX(img,x) tinymage_for1( img.width(), x )
 #define tinymage_forY(img,y) tinymage_for1( img.height(), y )
+#define tinymage_forXY(img,x,y) tinymage_forY(img,y) tinymage_forX(img,x)
 
 template<typename T=float>
 class tinymage final : private std::vector<T>
@@ -261,47 +263,44 @@ public:
 
     	/*Edge detection */
 
-    	for ( auto y = std::size_t(0); y < m_height; y++ )
-    	{
-        	for( auto x = std::size_t(0); x < m_width; x++ )
-            {
-    			sumX	= 0;
-    			sumY	= 0;
+        tinymage_forXY((*this),x,y)
+        {
+			sumX	= 0;
+			sumY	= 0;
 
-    			/*Image Boundaries*/
-    			if( y == 0 || y == m_height - 1 )
-    				sum = 0;
-    			else if( x == 0 || x == m_width - 1 )
-    				sum = 0;
-    			else
-    			{
-    				/*Convolution for X*/
-    				for( auto i = -1; i < 2; i++ )
-    				{
-    					for( auto j = -1; j < 2; j++ )
-    					{
-    						sumX = sumX + GX[j+1][i+1] * c_at(x+j,y+i);
-    					}
-    				}
+			/*Image Boundaries*/
+			if( y == 0 || y == m_height - 1 )
+				sum = 0;
+			else if( x == 0 || x == m_width - 1 )
+				sum = 0;
+			else
+			{
+				/*Convolution for X*/
+				for( auto i = -1; i < 2; i++ )
+				{
+					for( auto j = -1; j < 2; j++ )
+					{
+						sumX = sumX + GX[j+1][i+1] * c_at(x+j,y+i);
+					}
+				}
 
-    				/*Convolution for Y*/
-    				for( auto i = -1; i < 2; i++ )
-    				{
-    					for( auto j = -1; j < 2; j++ )
-    					{
-    						sumY = sumY + GY[j+1][i+1] * c_at(x+j,y+i);
-    					}
-    				}
+				/*Convolution for Y*/
+				for( auto i = -1; i < 2; i++ )
+				{
+					for( auto j = -1; j < 2; j++ )
+					{
+						sumY = sumY + GY[j+1][i+1] * c_at(x+j,y+i);
+					}
+				}
 
-    				/*Edge strength*/
-    				sum = static_cast<T>( std::sqrt( sumX*sumX + sumY*sumY ) );
-                    // sum = std::abs(sumX) + std::abs(sumY);
-    			}
+				/*Edge strength*/
+				sum = static_cast<T>( std::sqrt( sumX*sumX + sumY*sumY ) );
+                // sum = std::abs(sumX) + std::abs(sumY);
+			}
 
-                // clamp range to [0,255]
-        	    output.at(x,y) = sum % 255;
-    		}
-    	}
+            // clamp range to [0,255]
+    	    output.at(x,y) = sum % 255;
+		}
 
         return output;
     }
