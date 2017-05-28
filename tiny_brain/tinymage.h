@@ -122,7 +122,7 @@ public:
     template<typename R>
     tinymage<R> convert() const
     {
-        tinymage<R> output( m_width, m_height, 0.f );
+        tinymage<R> output( m_width, m_height, 0 );
         auto output_iter = output.begin();
 
         std::for_each( begin(), end(), [&]( const T& val )
@@ -180,7 +180,11 @@ public:
         assert( stopx >= startx );
         assert( stopy >= starty );
 
+        assert( stopx-startx <= m_width );
+        assert( stopy-starty <= m_height );
+
         tinymage<T> output( stopx-startx, stopy-starty );
+
         for ( auto yin = starty,yout = std::size_t(0); yin<stopy; yin++, yout++ )
             for ( auto xin = startx,xout = std::size_t(0); xin<stopx; xin++, xout++ )
                 output.at(xout,yout) = c_at(xin,yin);
@@ -196,9 +200,26 @@ public:
         *this = get_crop( startx, starty, stopx, stopy );
     }
 
-    void get_canvas_resize( std::size_t nsx, std::size_t nsy )
+    void canvas_resize( std::size_t nsx, std::size_t nsy, float center_x = 0.5f, float center_y = 0.5f )
     {
+        *this = get_canvas_resize( nsx, nsy, center_x, center_y );
+    }
+
+    tinymage<T> get_canvas_resize( std::size_t nsx, std::size_t nsy, float center_x = 0.5f, float center_y = 0.5f  )
+    {
+		tinymage<T> output( nsx, nsy, 0 );
+
+        // std::size_t startx;
+        // std::size_t starty;
+        // std::size_t stopx;
+        // std::size_t stopy;
+
 		// NOT IMPLEMENTED YET
+        // for ( auto yin = starty,yout = std::size_t(0); yin<stopy; yin++, yout++ )
+        //     for ( auto xin = startx,xout = std::size_t(0); xin<stopx; xin++, xout++ )
+        //         output.at(xout,yout) = c_at(xin,yin);
+
+        return output;
     }
 
     void resize( std::size_t nsx, std::size_t nsy )

@@ -38,6 +38,9 @@ int main( int argc, char **argv )
     work.auto_threshold();
     work.display();
 
+    tinymage<unsigned char> crop = work.get_crop( 88, 185, 380, 275 );
+    crop.display();
+
     tinymage<float> row_sums( work.convert<float>().row_sums() );
     row_sums.display();
 
