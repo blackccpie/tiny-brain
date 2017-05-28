@@ -38,11 +38,14 @@ int main( int argc, char **argv )
     work.auto_threshold();
     work.display();
 
-    tinymage<float> row_sums( work.row_sums().convert<float>() );
+    tinymage<float> row_sums( work.convert<float>().row_sums() );
     row_sums.display();
 
-    tinymage<float> line_sums( work.line_sums().convert<float>() );
+    tinymage<float> line_sums( work.convert<float>().line_sums() );
     line_sums.display();
+
+    work.resize( 100, 100 );
+    work.display();
 
     work.save_png( "test.png" );
 

@@ -165,12 +165,12 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     //work_edge.display();
 
     // Compute row sums image
-    tinymage<float> row_sums( work_edge.row_sums().convert<float>() );
+    tinymage<float> row_sums( work_edge.convert<float>().row_sums() );
     row_sums.threshold( 5.f );
     //row_sums.display();
 
     // Compute line sums image
-    tinymage<float> line_sums( work_edge.line_sums().convert<float>() );
+    tinymage<float> line_sums( work_edge.convert<float>().line_sums() );
     line_sums.threshold( 5.f );
     //line_sums.display();
 
@@ -337,7 +337,7 @@ void center_number( tinymage<float>& input )
 
     input.crop( startX, startY, stopX, stopY );
     // input.resize( max_dim, max_dim, -100, -100, 0, 0, 0.5f, 0.5f );
-    // input.resize( 20, 20, -100, -100, 6 );
+    input.resize( 20, 20 );
     input.normalize( 0, 255 );
 
     // compute center of mass

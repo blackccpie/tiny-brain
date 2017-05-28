@@ -45,6 +45,11 @@ THE SOFTWARE.
 #define STB_IMAGE_WRITE_INLINE
 #include "stb/stb_image_write.h"
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#define STB_IMAGE_RESIZE_STATIC
+#define STB_IMAGE_RESIZE_INLINE
+#include "stb/stb_image_resize.h"
+
 #define tinymage_for1(bound,i) for (std::size_t i = 0UL; i<bound; ++i)
 #define tinymage_forX(img,x) tinymage_for1( img.width(), x )
 #define tinymage_forY(img,y) tinymage_for1( img.height(), y )
@@ -53,8 +58,11 @@ THE SOFTWARE.
 template<typename T=float>
 class tinymage final : private std::vector<T>
 {
+	// TODO : factorize
     template<typename U>
     using tinymage_if_uchar = std::enable_if_t<std::is_same<unsigned char, U>::value, tinymage<U>>;
+    template<typename U>
+    using tinymage_if_float = std::enable_if_t<std::is_same<float, U>::value, tinymage<U>>;
 
     using std::vector<T>::at;
     using std::vector<T>::assign;
@@ -188,7 +196,34 @@ public:
         *this = get_crop( startx, starty, stopx, stopy );
     }
 
-    tinymage<T> line_sums() const
+    void canvas_resize( std::size_t nsx, std::size_t nsy )
+    {
+		// NOT IMPLEMENTED YET
+    }
+
+    void resize( std::size_t nsx, std::size_t nsy )
+    {
+        *this = get_resize( nsx, nsy );
+    }
+
+    template<typename U = T>
+    tinymage_if_uchar<U> get_resize( std::size_t nsx, std::size_t nsy )
+    {
+        tinymage<T> output( nsx, nsy );
+        stbir_resize_uint8( data(), m_width, m_height, 0, output.data(), nsx, nsy, 0, 1 );
+        return output;
+    }
+
+    template<typename U = T>
+    tinymage_if_float<U> get_resize( std::size_t nsx, std::size_t nsy )
+    {
+        tinymage<T> output( nsx, nsy );
+        stbir_resize_float( data(), m_width, m_height, 0, output.data(), nsx, nsy, 0, 1 );
+        return output;
+    }
+
+    template<typename U = T>
+    tinymage_if_float<U> line_sums() const
     {
         tinymage<T> output( 1, m_height, 0.f );
 
@@ -204,7 +239,8 @@ public:
         return output;
     }
 
-    tinymage<T> row_sums() const
+    template<typename U = T>
+    tinymage_if_float<U> row_sums() const
     {
         tinymage<T> output( m_width, 1, 0.f );
 
