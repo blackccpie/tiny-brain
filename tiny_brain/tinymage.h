@@ -196,7 +196,7 @@ public:
         *this = get_crop( startx, starty, stopx, stopy );
     }
 
-    void canvas_resize( std::size_t nsx, std::size_t nsy )
+    void get_canvas_resize( std::size_t nsx, std::size_t nsy )
     {
 		// NOT IMPLEMENTED YET
     }
@@ -227,13 +227,16 @@ public:
     {
         tinymage<T> output( 1, m_height, 0.f );
 
-        std::size_t line_index{0},line_index_out{0};
+        std::size_t line_index{0},line_index_out{0},width{m_width};
 
         std::for_each( begin(), end(), [&]( const T& val )
             {
                 output.at(0,line_index_out) += val;
-                if ( ++line_index == output.width() )
+                if ( ++line_index == width )
+                {
+                    line_index = 0;
                     line_index_out++;
+                }
             });
 
         return output;
