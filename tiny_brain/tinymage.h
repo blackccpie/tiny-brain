@@ -200,24 +200,28 @@ public:
         *this = get_crop( startx, starty, stopx, stopy );
     }
 
-    void canvas_resize( std::size_t nsx, std::size_t nsy, float center_x = 0.5f, float center_y = 0.5f )
+    void canvas_resize( std::size_t nsx, std::size_t nsy, float centering_x = 0.5f, float centering_y = 0.5f )
     {
-        *this = get_canvas_resize( nsx, nsy, center_x, center_y );
+        *this = get_canvas_resize( nsx, nsy, centering_x, centering_y );
     }
 
-    tinymage<T> get_canvas_resize( std::size_t nsx, std::size_t nsy, float center_x = 0.5f, float center_y = 0.5f  )
+    tinymage<T> get_canvas_resize( std::size_t nsx, std::size_t nsy, float centering_x = 0.5f, float centering_y = 0.5f  )
     {
+        // Only default dirichlet condition is managed for now
+
+        assert( nsx > 0 && nsy > 0 );
+        assert( centering_x <= 1.f && centering_x >= 0.f );
+        assert( centering_y <= 1.f && centering_y >= 0.f );
+
 		tinymage<T> output( nsx, nsy, 0 );
 
-        // std::size_t startx;
-        // std::size_t starty;
-        // std::size_t stopx;
-        // std::size_t stopy;
+        const int32_t   xc{ static_cast<int32_t>( centering_x * ( nsx - m_width ) )},
+                        yc{ static_cast<int32_t>( centering_y * ( nsy - m_height ) )};
 
-		// NOT IMPLEMENTED YET
-        // for ( auto yin = starty,yout = std::size_t(0); yin<stopy; yin++, yout++ )
-        //     for ( auto xin = startx,xout = std::size_t(0); xin<stopx; xin++, xout++ )
-        //         output.at(xout,yout) = c_at(xin,yin);
+        tinymage_forXY( (*this), x, y )
+        {
+            output.at( x + xc, y + yc ) = c_at( x, y );
+        }
 
         return output;
     }

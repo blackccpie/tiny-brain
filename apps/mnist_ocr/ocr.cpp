@@ -336,7 +336,7 @@ void center_number( tinymage<float>& input )
     std::size_t max_dim = std::max( stopX - startX, stopY - startY );
 
     input.crop( startX, startY, stopX, stopY );
-    // input.resize( max_dim, max_dim, -100, -100, 0, 0, 0.5f, 0.5f );
+    input.canvas_resize( max_dim, max_dim, 0.5f, 0.5f );
     input.resize( 20, 20 );
     input.normalize( 0, 255 );
 
@@ -355,7 +355,9 @@ void center_number( tinymage<float>& input )
 
     std::cout << "center_number - Mass center X=" << massX << " Y=" << massY << std::endl;
 
-    //input.resize( 28, 28, -100, -100, 0, 0, 1.f - ((float)massX)/20.f, 1.f - ((float)massY)/20.f );
+    input.canvas_resize(    28, 28,
+                            1.f - static_cast<float>( massX ) / 20.f,
+                            1.f - static_cast<float>( massY ) / 20.f );
 
     input.normalize( 0.f, 1.f );
 

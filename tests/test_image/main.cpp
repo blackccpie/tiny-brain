@@ -50,6 +50,12 @@ int main( int argc, char **argv )
     work.resize( 100, 100 );
     work.display();
 
+    tinymage<unsigned char> canvased = work.get_canvas_resize( 200, 200 );
+    canvased.display();
+
+    tinymage<unsigned char> canvased2 = work.get_canvas_resize( 200, 200, 0.75f, 0.75f );
+    canvased2.display();
+
     work.save_png( "test.png" );
 
     return 0;
