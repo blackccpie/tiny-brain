@@ -195,7 +195,7 @@ public:
     {
         std::for_each( begin(), end(), [&]( T& val )
             {
-                val = std::max( val, thresh );
+                val = val > thresh ? m_one : m_zero;
             });
     }
 
@@ -409,6 +409,9 @@ public:
 private:
     std::size_t m_width;
     std::size_t m_height;
+
+    constexpr static T m_zero{ static_cast<T>(0) };
+    constexpr static T m_one{ static_cast<T>(1) };
 
 private:
 
