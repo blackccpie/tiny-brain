@@ -58,6 +58,10 @@ THE SOFTWARE.
 template<typename T=float>
 class tinymage final : private std::vector<T>
 {
+    // any other type of tinymage is a friend.
+    template <typename U>
+    friend class tinymage;
+
 	// TODO : factorize
     template<typename U>
     using tinymage_if_uchar = std::enable_if_t<std::is_same<unsigned char, U>::value, tinymage<U>>;
@@ -69,11 +73,11 @@ class tinymage final : private std::vector<T>
     using std::vector<T>::data;
     using std::vector<T>::size;
 
-public:
     using std::vector<T>::begin;
     using std::vector<T>::end;
 
 public:
+
     tinymage() : m_width{0}, m_height{0} {}
     tinymage( std::size_t sx, std::size_t sy, T val = 0 ) : std::vector<T>( sx*sy, val ), m_width{sx}, m_height{sy} {}
     tinymage( uint8_t* buf, std::size_t sx, std::size_t sy, std::size_t bpp ) : m_width{sx}, m_height{sy}
@@ -152,6 +156,29 @@ public:
             });
     }
 
+    // TODO : factorize with normalize
+    tinymage<T> get_normalize( T min, T max )
+    {
+        assert( max > min );
+
+        auto cur_min = *std::min_element( begin(), end() );
+        auto cur_max = *std::max_element( begin(), end() );
+
+        assert( cur_max > cur_min );
+
+        double cur_dyn = cur_max - cur_min;
+        double out_dyn = max - min;
+
+        tinymage<T> output( *this );
+
+        std::for_each( output.begin(), output.end(), [&]( T& val )
+            {
+                val = min + ( out_dyn * ( val - cur_min ) / cur_dyn );
+            });
+
+        return output;
+    }
+
     T mean() const
     {
         double sum;
@@ -209,7 +236,7 @@ public:
     {
         // Only default dirichlet condition is managed for now
 
-        assert( nsx > 0 && nsy > 0 );
+        assert( nsx > m_width && nsy > m_height );
         assert( centering_x <= 1.f && centering_x >= 0.f );
         assert( centering_y <= 1.f && centering_y >= 0.f );
 
@@ -447,4 +474,20 @@ private:
         data[0]= count0; data[maxValue]=countMax;
         return std::round<int>(result);
     }
+
+ private:
+
+     template <typename F>
+     friend tinymage<F> operator-( const F& val, const tinymage<F>& t );
 };
+
+template <typename T>
+inline tinymage<T> operator-( const T& val, const tinymage<T>& t )
+{
+    tinymage<T> output( t );
+    std::for_each( output.begin(), output.end(), [&]( T& tval )
+        {
+            tval = val - tval;
+        });
+    return output;
+}

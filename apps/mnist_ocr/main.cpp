@@ -34,7 +34,7 @@ int main( int argc, char **argv )
     tinymage<float> img;
 #else
     tinymage<float> img;
-    img.load( "/home/blackccpie/Images/numbers.png" );
+    img.load( "../data/ocr/123456.png" );
     img.display();
 #endif
 

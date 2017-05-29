@@ -228,7 +228,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     std::cout << margin << " / " << startX << " " << startY << " " << stopX << " " << stopY << std::endl;
 
     tinymage<float> cropped( input.get_crop( startX, startY, stopX, stopY ) );
-    //cropped = 1.f - cropped;
+    cropped = 1.f - cropped;
 
     return cropped;
 }

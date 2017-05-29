@@ -56,6 +56,10 @@ int main( int argc, char **argv )
     tinymage<unsigned char> canvased2 = work.get_canvas_resize( 200, 200, 0.75f, 0.75f );
     canvased2.display();
 
+    tinymage<float> normalized = work.convert<float>().get_normalize( 0.f, 1.f );
+    normalized = 1.f - normalized;
+    normalized.display();
+
     work.save_png( "test.png" );
 
     return 0;
