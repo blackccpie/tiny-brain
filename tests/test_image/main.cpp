@@ -29,7 +29,7 @@ THE SOFTWARE.
 int main( int argc, char **argv )
 {
     tinymage<float> img;
-    img.load( "/home/blackccpie/Images/numbers.png" );
+    img.load( "../data/ocr/123456.png" );
     img.display();
 
     tinymage<unsigned char> work = img.convert<unsigned char>().get_sobel();
