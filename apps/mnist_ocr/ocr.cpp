@@ -75,7 +75,7 @@ public:
             center_number( cropped_number );
 
             // convert imagefile to vec_t
-            cropped_number.resize( 32, 32 );
+            cropped_number.canvas_resize( 32, 32 );
             cropped_number.normalize( -1.f, 1.f );
             vec_t data( cropped_number.data(), cropped_number.data() + cropped_number.size() );
 
@@ -287,7 +287,7 @@ void center_number( tinymage<float>& input )
     //row_sums.display();
 
     std::size_t startX = 0;
-    std::size_t stopX = 0;
+    std::size_t stopX = row_sums.width();
     bool last_val = false;
     tinymage_forX( row_sums, x )
     {
@@ -312,7 +312,7 @@ void center_number( tinymage<float>& input )
     //line_sums.display();
 
     std::size_t startY = 0;
-    std::size_t stopY = 0;
+    std::size_t stopY = line_sums.height();
     last_val = false;
     tinymage_forY( line_sums, y )
     {
