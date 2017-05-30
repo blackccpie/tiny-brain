@@ -236,6 +236,12 @@ public:
         return get_crop( startx, 0, stopx, m_height );
     }
 
+    tinymage<T> get_lines(  std::size_t starty,
+                            std::size_t stopy ) const
+    {
+        return get_crop( 0, starty, m_width, stopy );
+    }
+
     void canvas_resize( std::size_t nsx, std::size_t nsy, float centering_x = 0.5f, float centering_y = 0.5f )
     {
         *this = get_canvas_resize( nsx, nsy, centering_x, centering_y );
@@ -405,6 +411,48 @@ public:
         return output;
     }
 
+    tinymage<T> get_rotate( float angle )
+    {
+        tinymage<T> output( m_width, m_height, 0 );
+
+        // define the center of the image, which is the center of rotation.
+        auto vertical_center = std::floor( m_width / 2 );
+        auto horizontal_center = std::floor( m_height / 2 );
+
+        // loop through each pixel of the new image, select the new vertical
+        // and horizontal positions, and interpolate the image to make the change.
+        tinymage_forXY( output, x, y )
+        {
+            // figure out how rotated we want the image.
+            auto _rad = angle * m_pi / 180.;
+            auto vertical_position = std::cos( _rad ) *
+                ( x - vertical_center ) + std::sin( _rad ) * ( y - horizontal_center )
+                + vertical_center;
+            auto horizontal_position = -std::sin(_rad) *
+                ( x - vertical_center ) + std::cos( _rad ) * ( y - horizontal_center )
+                + horizontal_center;
+
+            // figure out the four locations (and then, four pixels)
+            // that we must interpolate from the original image.
+            auto top = std::floor( vertical_position );
+            auto bottom = top + 1;
+            auto left = std::floor( horizontal_position );
+            auto right = left + 1;
+
+            // check if any of the four locations are invalid. If they are,
+            // skip interpolating this pixel. Otherwise, interpolate the
+            // pixel according to the dimensions set above and set the
+            // resulting pixel.
+            if ( top >= 0 && bottom < m_width && left >= 0 && right < m_height )
+            {
+                output.at( x, y ) = _bilinear_interpolation(top, bottom,
+                    left, right, horizontal_position, vertical_position );
+            }
+        }
+
+        return output;
+    }
+
     void display() const
     {
 #ifdef USE_CIMG
@@ -419,8 +467,10 @@ private:
     std::size_t m_width;
     std::size_t m_height;
 
-    constexpr static T m_zero{ static_cast<T>(0) };
-    constexpr static T m_one{ static_cast<T>(1) };
+    constexpr static T m_zero{ 0 };
+    constexpr static T m_one{ 1 };
+
+    constexpr static double m_pi{ std::acos( -1. ) };
 
 private:
 
@@ -485,6 +535,23 @@ private:
         } while ((movingIndex+1)<=result && movingIndex<max-1);
         data[0]= count0; data[maxValue]=countMax;
         return std::round<int>(result);
+    }
+
+    T _bilinear_interpolation(  int top, int bottom, int left, int right,
+                                float horizontal_position, float vertical_position )
+    {
+        // figure out "how far" the output pixel being considered is between *_left and *_right.
+        auto horizontal_progress = horizontal_position - left;
+        auto vertical_progress = vertical_position - top;
+
+        // combine top_left and top_right into one large, horizontal block.
+        auto top_block = c_at( top, left ) + horizontal_progress * ( c_at( top, right ) - c_at( top, left ) );
+
+        // combine bottom_left and bottom_right into one large, horizontal block.
+        auto bottom_block = c_at( bottom, left ) + horizontal_progress * ( c_at( bottom, right ) - c_at( bottom, left ) );
+
+        // combine the top_block and bottom_block using vertical interpolation and return as the resulting pixel.
+        return static_cast<T>( top_block + vertical_progress * ( bottom_block - top_block ) );
     }
 
  private:

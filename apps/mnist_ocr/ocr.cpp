@@ -54,8 +54,6 @@ public:
         std::vector<t_digit_interval> number_intervals;
         compute_ranges( m_cropped_numbers, number_intervals );
 
-        // std::shared_ptr<samples_augmenter> smp_augmenter = std::make_shared<samples_augmenter>( 28, 28 );
-
         float output[10] = { 0.f };
 
         std::cout << "ocr_helper::process - started inferring numbers on detected intervals" << std::endl;
@@ -86,7 +84,6 @@ public:
             auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
             auto max_score_val = *max_score;
 
-        //     sample sample( cropped_number.width() * cropped_number.height(), cropped_number.data(), 10, output );
         //     m_net_manager->compute_augmented_output( sample, smp_augmenter );
 
             std::cout << "ocr_helper::process - max comp idx: " << max_index << " max comp val: " << max_score_val << std::endl;

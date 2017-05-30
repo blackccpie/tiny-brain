@@ -32,6 +32,9 @@ int main( int argc, char **argv )
     img.load( "../data/ocr/123456.png" );
     img.display();
 
+    tinymage<float> rotated = img.get_rotate( 30.f );
+    rotated.display();
+
     tinymage<unsigned char> work = img.convert<unsigned char>().get_sobel();
     work.display();
 
