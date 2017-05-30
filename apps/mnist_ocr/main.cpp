@@ -45,8 +45,10 @@ int main( int argc, char **argv )
     ocr_helper ocr_h( nn );
     ocr_h.process( img );
 
-    auto& cropped_numbers = ocr_h.cropped_numbers();
-    cropped_numbers.display();
+    //auto& cropped_numbers = ocr_h.cropped_numbers();
+    //cropped_numbers.display();
+
+    std::cout << "INFERRED DIGITS ARE : " << ocr_h.reco_string() << std::endl;
 
     return 0;
 }

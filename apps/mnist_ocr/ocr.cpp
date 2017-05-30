@@ -49,40 +49,52 @@ public:
         m_cropped_numbers = get_cropped_numbers( img );
         m_cropped_numbers.normalize( 0.f, 255.f );
         m_cropped_numbers.auto_threshold();
-        //m_cropped_numbers.display();
+        m_cropped_numbers.display();
 
         std::vector<t_digit_interval> number_intervals;
         compute_ranges( m_cropped_numbers, number_intervals );
 
         // std::shared_ptr<samples_augmenter> smp_augmenter = std::make_shared<samples_augmenter>( 28, 28 );
-        //
-        // float output[10] = { 0.f };
-        //
-        // std::cout << "ocr_helper::process - started inferring numbers on detected intervals" << std::endl;
-        //
-        // for ( auto& ni : number_intervals )
-        // {
-        //     if ( ( ni.second - ni.first ) < 10 ) // letter is thinner than 10px, too small!!
-        //     {
-        //         std::cout << "ocr_helper::process - digit is too thin, skipping..." << std::endl;
-        //         continue;
-        //     }
-        //
-        //     std::cout << "ocr_helper::process - cropping at " << ni.first << " " << ni.second << std::endl;
-        //     CImg<float> cropped_number( m_cropped_numbers.get_columns( ni.first, ni.second ) );
-        //
-        //     std::cout << "ocr_helper::process - centering number" << std::endl;
-        //     center_number( cropped_number );
-        //
+
+        float output[10] = { 0.f };
+
+        std::cout << "ocr_helper::process - started inferring numbers on detected intervals" << std::endl;
+
+        for ( auto& ni : number_intervals )
+        {
+            if ( ( ni.second - ni.first ) < 10 ) // letter is thinner than 10px, too small!!
+            {
+                std::cout << "ocr_helper::process - digit is too thin, skipping..." << std::endl;
+                continue;
+            }
+
+            std::cout << "ocr_helper::process - cropping at " << ni.first << " " << ni.second << std::endl;
+            tinymage<float> cropped_number( m_cropped_numbers.get_columns( ni.first, ni.second ) );
+
+            std::cout << "ocr_helper::process - centering number" << std::endl;
+            center_number( cropped_number );
+
+            // convert imagefile to vec_t
+            cropped_number.resize( 32, 32 );
+            cropped_number.normalize( -1.f, 1.f );
+            vec_t data( cropped_number.data(), cropped_number.data() + cropped_number.size() );
+
+        	// recognize
+            auto res = m_net_manager.predict( data );
+
+            auto max_score = std::max_element( res.begin(), res.end() );
+            auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
+            auto max_score_val = *max_score;
+
         //     sample sample( cropped_number.width() * cropped_number.height(), cropped_number.data(), 10, output );
         //     m_net_manager->compute_augmented_output( sample, smp_augmenter );
-        //
-        //     std::cout << "ocr_helper::process - max comp idx: " << sample.max_comp_idx() << " max comp val: " << sample.max_comp_val() << std::endl;
-        //
-        //     m_recognitions.emplace_back( reco{ ni.first, sample.max_comp_idx(), 100.f * sample.max_comp_val() } );
-        //
-        //     //cropped_number.display();
-        // }
+
+            std::cout << "ocr_helper::process - max comp idx: " << max_index << " max comp val: " << max_score_val << std::endl;
+
+            m_recognitions.emplace_back( reco{ ni.first, max_index, 100.f * max_score_val } );
+
+        	cropped_number.display();
+        }
 
         std::cout << "ocr_helper::process - ended inferring numbers on detected intervals" << std::endl;
     }
@@ -152,7 +164,8 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
 
     work_edge.normalize( 0, 255 );
 
-    std::cout << "ocr_helper::get_cropped_numbers - image mean value is " << work_edge.mean() << std::endl; // TODO " , noise variance is " << work_edge.variance_noise() << std::endl;
+    std::cout << "ocr_helper::get_cropped_numbers - image mean value is " << static_cast<int>( work_edge.mean() ) << std::endl;
+    // TODO " , noise variance is " << work_edge.variance_noise() << std::endl;
 
     // TODO
     // if ( work_edge.variance_noise() > 10.f )
@@ -165,12 +178,12 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     //work_edge.display();
 
     // Compute row sums image
-    tinymage<float> row_sums( work_edge.convert<float>().row_sums() );
+    tinymage<float> row_sums = work_edge.convert<float>().row_sums();
     row_sums.threshold( 5.f );
     //row_sums.display();
 
     // Compute line sums image
-    tinymage<float> line_sums( work_edge.convert<float>().line_sums() );
+    tinymage<float> line_sums = work_edge.convert<float>().line_sums();
     line_sums.threshold( 5.f );
     //line_sums.display();
 
@@ -225,12 +238,9 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     stopX = std::min( stopX, input.width()-1 );
     stopY = std::min( stopY, input.height()-1 );
 
-    std::cout << margin << " / " << startX << " " << startY << " " << stopX << " " << stopY << std::endl;
+    std::cout << "ocr_helper::get_cropped_numbers - " << margin << " / " << startX << " " << startY << " " << stopX << " " << stopY << std::endl;
 
-    tinymage<float> cropped( input.get_crop( startX, startY, stopX, stopY ) );
-    cropped = 1.f - cropped;
-
-    return cropped;
+    return 1.f - input.get_crop( startX, startY, stopX, stopY );
 }
 
 void compute_ranges( const tinymage<float>& input, std::vector<t_digit_interval>& number_intervals )

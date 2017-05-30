@@ -70,13 +70,14 @@ class tinymage final : private std::vector<T>
 
     using std::vector<T>::at;
     using std::vector<T>::assign;
-    using std::vector<T>::data;
     using std::vector<T>::size;
 
     using std::vector<T>::begin;
     using std::vector<T>::end;
 
 public:
+
+    using std::vector<T>::data;
 
     tinymage() : m_width{0}, m_height{0} {}
     tinymage( std::size_t sx, std::size_t sy, T val = 0 ) : std::vector<T>( sx*sy, val ), m_width{sx}, m_height{sy} {}
@@ -85,6 +86,8 @@ public:
         assert( bpp == sizeof(T) );
         assign( buf, buf + sx*sy );
     }
+
+    std::size_t size() const { return m_width * m_height; }
 
     bool load( const std::string& img_path )
     {
@@ -225,6 +228,12 @@ public:
                 std::size_t stopy )
     {
         *this = get_crop( startx, starty, stopx, stopy );
+    }
+
+    tinymage<T> get_columns(    std::size_t startx,
+                                std::size_t stopx ) const
+    {
+        return get_crop( startx, 0, stopx, m_height );
     }
 
     void canvas_resize( std::size_t nsx, std::size_t nsy, float centering_x = 0.5f, float centering_y = 0.5f )
