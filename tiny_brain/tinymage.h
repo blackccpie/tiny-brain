@@ -411,9 +411,9 @@ public:
         return output;
     }
 
-    tinymage<T> get_rotate( float angle )
+    tinymage<T> get_rotate( float angle, T pad_val = 0 )
     {
-        tinymage<T> output( m_width, m_height, 0 );
+        tinymage<T> output( m_width, m_height, pad_val );
 
         // define the center of the image, which is the center of rotation.
         auto vertical_center = std::floor( m_width / 2 );

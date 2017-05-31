@@ -84,8 +84,6 @@ public:
             auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
             auto max_score_val = *max_score;
 
-        //     m_net_manager->compute_augmented_output( sample, smp_augmenter );
-
             std::cout << "ocr_helper::process - max comp idx: " << max_index << " max comp val: " << max_score_val << std::endl;
 
             m_recognitions.emplace_back( reco{ ni.first, max_index, 100.f * max_score_val } );
@@ -111,6 +109,50 @@ public:
         for ( auto& _reco : m_recognitions )
             _str += std::to_string( _reco.value );
         return _str;
+    }
+
+private:
+
+    vec_t _compute_augmented_output( tinymage<float>& img )
+    {
+        // ONLY ROTATION AUGMENTATION IS IMPLEMENTED YET
+        std::array<float,11> rotations{ -5.f, -4.f, -3.f, -2.f, -1.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f };
+
+        std::vector<vec_t> vec_res;
+
+        for ( const auto& rot : rotations )
+        {
+            // rotate and predict
+            auto rotated = img.get_rotate( rot, -1.f );
+            //rotated.display();
+            vec_res.emplace_back(
+                m_net_manager.predict( vec_t( rotated.data(), rotated.data() + rotated.size() ) )
+            );
+        }
+
+        // TODO : not very proud of the efficiency of this code section...
+        // still it is temporary, as computing a mean image would also makes sense!
+
+        auto i{0}, l{0};
+        auto max = std::numeric_limits<float>::min();
+        for ( const auto& res : vec_res )
+        {
+            // TODO : code sequance already used before, factorize somehow
+            auto max_score = std::max_element( res.begin(), res.end() );
+            auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
+            auto max_score_val = *max_score;
+
+            std::cout << "network_manager::compute_augmented_output - " << max_score_val << " " << max_index << std::endl;
+
+            if ( max_score_val > max )
+            {
+                l = i;
+                max = max_score_val;
+            }
+            i++;
+        }
+
+        return vec_res.at(l);
     }
 
 private:
@@ -156,7 +198,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
 {
     tinymage<unsigned char> work( input.convert<unsigned char>() );
 
-    // TODO : works on normalized 0...1 for now...
+    // returns [0...255] clamped image
     tinymage<unsigned char> work_edge = work.get_sobel();
 
     work_edge.normalize( 0, 255 );
@@ -186,7 +228,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
 
     // Compute extraction coords
     std::size_t startX = 0;
-    std::size_t stopX = 0;
+    std::size_t stopX = row_sums.width();
     tinymage_forX( row_sums, x )
     {
         if ( row_sums[x] )
@@ -205,7 +247,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     }
 
     std::size_t startY = 0;
-    std::size_t stopY = 0;
+    std::size_t stopY = line_sums.height();;
     tinymage_forY( line_sums, y )
     {
         if ( line_sums[y] )
@@ -223,17 +265,12 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
         }
     }
 
+    // apply margin & check boundaries
     std::size_t margin = ( stopY - startY ) / 7; // empirical ratio...
-    startX -= 2 * margin;
-    startY -= margin;
-    stopX += 2 * margin;
-    stopY += margin;
-
-    // check boundaries
-    startX = std::max( startX, std::size_t(0) );
-    startY = std::max( startY, std::size_t(0) );
-    stopX = std::min( stopX, input.width()-1 );
-    stopY = std::min( stopY, input.height()-1 );
+    startX -= std::min( startX, 2 * margin );
+    startY -= std::min( startX, margin );
+    stopX += std::min( input.width() - stopX - 1, 2 * margin );
+    stopY += std::min( input.height() - stopY - 1, margin );
 
     std::cout << "ocr_helper::get_cropped_numbers - " << margin << " / " << startX << " " << startY << " " << stopX << " " << stopY << std::endl;
 
