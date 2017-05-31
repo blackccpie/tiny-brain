@@ -126,6 +126,12 @@ public:
         return at( x + m_width*y );
     }
 
+    template<typename Func>
+    void apply( Func f )
+    {
+        std::for_each( begin(), end(), f );
+    }
+
     template<typename R>
     tinymage<R> convert() const
     {
@@ -292,7 +298,7 @@ public:
     template<typename U = T>
     tinymage_if_float<U> line_sums() const
     {
-        tinymage<T> output( 1, m_height, 0.f );
+        tinymage<U> output( 1, m_height, 0.f );
 
         std::size_t line_index{0},line_index_out{0},width{m_width};
 
@@ -312,7 +318,7 @@ public:
     template<typename U = T>
     tinymage_if_float<U> row_sums() const
     {
-        tinymage<T> output( m_width, 1, 0.f );
+        tinymage<U> output( m_width, 1, 0.f );
 
         std::size_t row_index{0};
 

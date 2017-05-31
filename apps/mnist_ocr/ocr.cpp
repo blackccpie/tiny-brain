@@ -75,10 +75,9 @@ public:
             // convert imagefile to vec_t
             cropped_number.canvas_resize( 32, 32 );
             cropped_number.normalize( -1.f, 1.f );
-            vec_t data( cropped_number.data(), cropped_number.data() + cropped_number.size() );
 
-        	// recognize
-            auto res = m_net_manager.predict( data );
+			// recognize using data augmentation
+            auto res = _compute_augmented_output( cropped_number );
 
             auto max_score = std::max_element( res.begin(), res.end() );
             auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
@@ -202,6 +201,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     tinymage<unsigned char> work_edge = work.get_sobel();
 
     work_edge.normalize( 0, 255 );
+    //work_edge.display();
 
     std::cout << "ocr_helper::get_cropped_numbers - image mean value is " << static_cast<int>( work_edge.mean() ) << std::endl;
     // TODO " , noise variance is " << work_edge.variance_noise() << std::endl;
@@ -247,7 +247,7 @@ tinymage<float> get_cropped_numbers( const tinymage<float>& input )
     }
 
     std::size_t startY = 0;
-    std::size_t stopY = line_sums.height();;
+    std::size_t stopY = line_sums.height();
     tinymage_forY( line_sums, y )
     {
         if ( line_sums[y] )
