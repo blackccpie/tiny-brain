@@ -26,5 +26,8 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
+if (NOT USE_EMSCRIPTEN)
 add_subdirectory(mnist_autotrain)
+endif ()
+
 add_subdirectory(mnist_ocr)

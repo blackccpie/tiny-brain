@@ -25,8 +25,7 @@ project (mnist_ocr)
 
 if (USE_EMSCRIPTEN)
 
-    # --no-heap-copy see : https://github.com/kripken/emscripten/issues/5179
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 --no-heap-copy --preload-file ${CMAKE_SOURCE_DIR}/tiny-dnn/data@/")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} -s WASM=1 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
 
 else ()

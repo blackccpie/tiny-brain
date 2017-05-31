@@ -22,4 +22,6 @@
 
 cmake_minimum_required (VERSION 3.5)
 
+if (NOT USE_EMSCRIPTEN)
 add_subdirectory(test_image)
+endif ()

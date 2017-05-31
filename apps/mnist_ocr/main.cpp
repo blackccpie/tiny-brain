@@ -30,10 +30,12 @@ THE SOFTWARE.
 
 int main( int argc, char **argv )
 {
+    tinymage<float> img;
+
 #ifdef __EMSCRIPTEN__
-    tinymage<float> img;
+    std::cout << "--> Running mnist_ocr as webassembly" << std::endl;
+    img.load( "./ocr/123456.png" );
 #else
-    tinymage<float> img;
     img.load( "../data/ocr/123456.png" );
     img.display();
 #endif
