@@ -1,0 +1,39 @@
+sudo: required
+dist: trusty
+
+language: cpp
+
+os:
+    - linux
+
+compiler:
+    - gcc
+    - clang
+
+  addons:
+  apt:
+    sources:
+        - ubuntu-toolchain-r-test
+        - george-edison55-cmake-3.x
+    packages:
+        - gcc-5
+        - g++-5
+        - clang
+        - cmake
+        - git
+
+branches:
+  only:
+    - master
+
+script:
+    # Export CC and CXX to tell cmake which compiler to use
+    - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$CXX" == "g++" ]; then
+        export CC="gcc-5";
+        export CXX="g++-5";
+    fi
+    - gcc --version
+    - g++ --version
+    - cmake --version
+    # Run your build commands next
+    - sh build_gcc_avx2.sh
