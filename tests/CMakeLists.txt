@@ -20,7 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.2)
 
 if (NOT USE_EMSCRIPTEN)
 add_subdirectory(test_image)
