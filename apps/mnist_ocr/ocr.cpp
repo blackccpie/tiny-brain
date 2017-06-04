@@ -54,8 +54,6 @@ public:
         std::vector<t_digit_interval> number_intervals;
         compute_ranges( m_cropped_numbers, number_intervals );
 
-        float output[10] = { 0.f };
-
         std::cout << "ocr_helper::process - started inferring numbers on detected intervals" << std::endl;
 
         for ( auto& ni : number_intervals )
@@ -195,10 +193,10 @@ std::string ocr_helper::reco_string()
 
 tinymage<float> get_cropped_numbers( const tinymage<float>& input )
 {
-    tinymage<unsigned char> work( input.convert<unsigned char>() );
+    auto work = input.convert<unsigned char>();
 
     // returns [0...255] clamped image
-    tinymage<unsigned char> work_edge = work.get_sobel();
+    auto work_edge = work.get_sobel();
 
     work_edge.normalize( 0, 255 );
     //work_edge.display();

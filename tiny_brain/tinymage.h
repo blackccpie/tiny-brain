@@ -105,7 +105,7 @@ public:
 
     bool save_png( const std::string& img_path )
     {
-        return stbi_write_png( img_path.c_str(), static_cast<int>( m_width ), static_cast<int>( m_height ), 1, 
+        return stbi_write_png( img_path.c_str(), static_cast<int>( m_width ), static_cast<int>( m_height ), 1,
 			data(), static_cast<int>( m_width * sizeof(T) ) ) != 0;
     }
 
@@ -191,7 +191,7 @@ public:
 
     T mean() const
     {
-        double sum;
+        auto sum{0.};
 
         std::for_each( begin(), end(), [&]( const T& val )
             {
@@ -284,7 +284,7 @@ public:
     tinymage_if_uchar<U> get_resize( std::size_t nsx, std::size_t nsy )
     {
         tinymage<T> output( nsx, nsy );
-        stbir_resize_uint8( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0, 
+        stbir_resize_uint8( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0,
 			output.data(), static_cast<int>(nsx), static_cast<int>(nsy), 0, 1);
         return output;
     }
@@ -293,7 +293,7 @@ public:
     tinymage_if_float<U> get_resize( std::size_t nsx, std::size_t nsy )
     {
         tinymage<T> output( nsx, nsy );
-        stbir_resize_float( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0, 
+        stbir_resize_float( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0,
 			output.data(), static_cast<int>( nsx ), static_cast<int>( nsy ), 0, 1 );
         return output;
     }
@@ -341,10 +341,12 @@ public:
         auto min = *std::min_element( begin(), end() );
         auto max = *std::max_element( begin(), end() );
 
-        std::array<std::size_t,nb_bins> hist;
+        float inv_dynamic = nb_bins/( max - min );
+        std::array<std::size_t,nb_bins> hist{}; // zero init
         std::for_each( begin(), end(), [&]( const T& val )
             {
-                ++hist[val==max?nb_bins-1:static_cast<std::size_t>((val - min)*nb_bins/(max - min))];
+                ++hist[ val == max ? nb_bins-1 :
+                	static_cast<std::size_t>((val-min)*inv_dynamic) ];
             });
 
         return hist;
@@ -465,7 +467,7 @@ public:
     void display() const
     {
 #ifdef USE_CIMG
-        cimg_library::CImg<T> cimg( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 1, 1, true/*shared*/ );
+        const cimg_library::CImg<T> cimg( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 1, 1, true/*shared*/ );
         cimg.display();
 #else
         // NOT IMPLEMENTED YET
