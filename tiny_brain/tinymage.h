@@ -191,7 +191,7 @@ public:
 
     T mean() const
     {
-        auto sum{0.};
+        auto sum = 0.;
 
         std::for_each( begin(), end(), [&]( const T& val )
             {
@@ -454,7 +454,7 @@ public:
             // skip interpolating this pixel. Otherwise, interpolate the
             // pixel according to the dimensions set above and set the
             // resulting pixel.
-            if ( top >= 0 && bottom < static_cast<std::ptrdiff_t>( m_width ) && 
+            if ( top >= 0 && bottom < static_cast<std::ptrdiff_t>( m_width ) &&
 				left >= 0 && right < static_cast<std::ptrdiff_t>( m_height ) )
             {
                 output.at( x, y ) = _bilinear_interpolation( top, bottom,
@@ -493,7 +493,7 @@ private:
     int _default_isodata( const std::array<std::size_t,length>& data )
     {
         std::array<std::size_t,length> data2;
-        std::size_t mode=0, maxCount=0;
+        std::size_t mode=0, maxCount=0, maxCount2=0;
         for ( auto i=std::size_t(0); i<length; i++ ) {
             data2[i] = data[i];
             if ( data2[i]>maxCount ) {
@@ -501,54 +501,51 @@ private:
                 mode = i;
             }
         }
-        std::size_t maxCount2 = 0;
         for ( auto i=std::size_t(0); i<length; i++ ) {
             if ((data2[i]>maxCount2) && (i!=mode))
                 maxCount2 = data2[i];
         }
         auto hmax = maxCount;
         if ( (hmax>(maxCount2*2)) && (maxCount2!=0) ) {
-            hmax = (int)(maxCount2 * 1.5);
+            hmax = static_cast<int>( maxCount2 * 1.5 );
             data2[mode] = hmax;
         }
         return _isodata<length>( data2 );
     }
 
+    // Warning : will modify data array
     template<std::size_t length>
     int _isodata( std::array<std::size_t,length>& data )
     {
-        // This is the original ImageJ IsoData implementation, here for backward compatibility.
-        int maxValue = length - 1;
-        double result, sum1, sum2, sum3, sum4;
-        auto count0 = data[0];
-        data[0] = 0; //set to zero so erased areas aren't included
-        auto countMax = data[maxValue];
-        data[maxValue] = 0;
-        auto min = 0;
-        while ( (data[min]==0) && (min<maxValue) )
-            min++;
+        data.front() = 0; //set to zero so erased areas aren't included
+        data.back() = 0;
+
+        auto maxValue = length - 1;
+
+        auto min = std::size_t{0};
+        while ( (data[min]==0) && (min<maxValue) ) min++;
         auto max = maxValue;
-        while ((data[max]==0) && (max>0))
-            max--;
-        if (min>=max) {
-            data[0]= count0; data[maxValue]=countMax;
-            return length/2;
-        }
+        while ( (data[max]==0) && (max>0) ) max--;
+        if ( min>=max )
+            return static_cast<int>( length / 2 );
+
+        double result, sum1, sum2, sum3, sum4;
+
         auto movingIndex = min;
         do {
             sum1=sum2=sum3=sum4=0.0;
-            for (int i=min; i<=movingIndex; i++) {
-                sum1 += (double)i*data[i];
+            for ( auto i=min; i<=movingIndex; i++ ) {
+                sum1 += static_cast<double>(i*data[i]);
                 sum2 += data[i];
             }
-            for (int i=(movingIndex+1); i<=max; i++) {
-                sum3 += (double)i*data[i];
+            for ( auto i=(movingIndex+1); i<=max; i++) {
+                sum3 += static_cast<double>(i*data[i]);
                 sum4 += data[i];
             }
             result = (sum1/sum2 + sum3/sum4)/2.0;
             movingIndex++;
         } while ( ( movingIndex + 1 ) <= result && movingIndex < max - 1 );
-        data[0]= count0; data[maxValue]=countMax;
+
         return static_cast<int>( std::round( result ) );
     }
 

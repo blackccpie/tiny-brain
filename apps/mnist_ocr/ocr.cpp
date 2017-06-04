@@ -49,7 +49,7 @@ public:
         m_cropped_numbers = get_cropped_numbers( img );
         m_cropped_numbers.normalize( 0.f, 255.f );
         m_cropped_numbers.auto_threshold();
-        m_cropped_numbers.display();
+        //m_cropped_numbers.display();
 
         std::vector<t_digit_interval> number_intervals;
         compute_ranges( m_cropped_numbers, number_intervals );
@@ -65,7 +65,7 @@ public:
             }
 
             std::cout << "ocr_helper::process - cropping at " << ni.first << " " << ni.second << std::endl;
-            tinymage<float> cropped_number( m_cropped_numbers.get_columns( ni.first, ni.second ) );
+            auto cropped_number = m_cropped_numbers.get_columns( ni.first, ni.second );
 
             std::cout << "ocr_helper::process - centering number" << std::endl;
             center_number( cropped_number );
@@ -85,7 +85,7 @@ public:
 
             m_recognitions.emplace_back( reco{ ni.first, max_index, 100.f * max_score_val } );
 
-        	cropped_number.display();
+        	//cropped_number.display();
         }
 
         std::cout << "ocr_helper::process - ended inferring numbers on detected intervals" << std::endl;
@@ -113,7 +113,7 @@ private:
     vec_t _compute_augmented_output( tinymage<float>& img )
     {
         // ONLY ROTATION AUGMENTATION IS IMPLEMENTED YET
-        std::array<float,11> rotations{ -5.f, -4.f, -3.f, -2.f, -1.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f };
+        std::array<float,11> rotations{ { -5.f, -4.f, -3.f, -2.f, -1.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f } };
 
         std::vector<vec_t> vec_res;
 
@@ -134,7 +134,7 @@ private:
         auto max = std::numeric_limits<float>::min();
         for ( const auto& res : vec_res )
         {
-            // TODO : code sequance already used before, factorize somehow
+            // TODO : code sequence already used before, factorize somehow
             auto max_score = std::max_element( res.begin(), res.end() );
             auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
             auto max_score_val = *max_score;
