@@ -62,11 +62,15 @@ class tinymage final : private std::vector<T>
     template <typename U>
     friend class tinymage;
 
-	// TODO : factorize
-    template<typename U>
-    using tinymage_if_uchar = std::enable_if_t<std::is_same<unsigned char, U>::value, tinymage<U>>;
-    template<typename U>
-    using tinymage_if_float = std::enable_if_t<std::is_same<float, U>::value, tinymage<U>>;
+    template<typename U,typename V>
+    using tinymage_if = std::enable_if_t<std::is_same<V, U>::value, tinymage<U>>;
+    template<typename U,typename V>
+    using tinymage_if_pair = std::enable_if_t<std::is_same<V, U>::value, std::pair<tinymage<U>,tinymage<U>>>;
+
+    template<typename U> using tinymage_if_uchar = tinymage_if<U,unsigned char>;
+    template<typename U> using tinymage_if_float = tinymage_if<U,float>;
+
+    template<typename U> using tinymage_if_pair_float = tinymage_if_pair<U,float>;
 
     using std::vector<T>::at;
     using std::vector<T>::assign;
@@ -150,42 +154,13 @@ public:
 
     void normalize( T min, T max )
     {
-        assert( max > min );
-
-        auto cur_min = *std::min_element( begin(), end() );
-        auto cur_max = *std::max_element( begin(), end() );
-
-        assert( cur_max > cur_min );
-
-        double cur_dyn = cur_max - cur_min;
-        double out_dyn = max - min;
-
-        std::for_each( begin(), end(), [&]( T& val )
-            {
-                val = static_cast<T>( min + ( out_dyn * ( val - cur_min ) / cur_dyn ) );
-            });
+        _normalize( *this, min, max );
     }
 
-    // TODO : factorize with normalize
     tinymage<T> get_normalize( T min, T max )
     {
-        assert( max > min );
-
-        auto cur_min = *std::min_element( begin(), end() );
-        auto cur_max = *std::max_element( begin(), end() );
-
-        assert( cur_max > cur_min );
-
-        double cur_dyn = cur_max - cur_min;
-        double out_dyn = max - min;
-
         tinymage<T> output( *this );
-
-        std::for_each( output.begin(), output.end(), [&]( T& val )
-            {
-                val = static_cast<T>( min + ( out_dyn * ( val - cur_min ) / cur_dyn ) );
-            });
-
+        _normalize( output, min, max );
         return output;
     }
 
@@ -334,6 +309,37 @@ public:
 
         return output;
     }
+
+    template<typename U = T>
+    tinymage_if_pair_float<U> line_row_sums() const
+    {
+        auto outputs = std::make_pair<tinymage<float>,tinymage<float>>(
+            tinymage<float>( 1, m_height, 0.f ),
+            tinymage<float>( m_width, 1, 0.f )
+        );
+
+        std::size_t row_index{0};
+        std::size_t line_index{0},line_index_out{0},width{m_width};
+
+        std::for_each( begin(), end(), [&]( const T& val )
+            {
+                outputs.first.at(0,line_index_out) += val;
+                if ( ++line_index == width )
+                {
+                    line_index = 0;
+                    line_index_out++;
+                }
+
+                outputs.second.at(row_index,0) += val;
+                if ( ++row_index == outputs.second.width() )
+                    row_index = 0;
+            });
+
+        return outputs;
+    }
+
+    //template<typename U = T>
+    //tinymage_if_float<U> row_sums() const
 
     template<std::size_t nb_bins>
     std::array<std::size_t,nb_bins> get_histogram()
@@ -488,6 +494,24 @@ private:
     // constexpr static float m_pi{ std::acos( -1.f ) };
 
 private:
+
+    void _normalize( tinymage<T>& input, T min, T max )
+    {
+        assert( max > min );
+
+        auto cur_min = *std::min_element( begin(), end() );
+        auto cur_max = *std::max_element( begin(), end() );
+
+        assert( cur_max > cur_min );
+
+        double cur_dyn = cur_max - cur_min;
+        double out_dyn = max - min;
+
+        std::for_each( input.begin(), input.end(), [&]( T& val )
+            {
+                val = static_cast<T>( min + ( out_dyn * ( val - cur_min ) / cur_dyn ) );
+            });
+    }
 
     template<std::size_t length>
     int _default_isodata( const std::array<std::size_t,length>& data )
