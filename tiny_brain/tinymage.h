@@ -341,12 +341,12 @@ public:
         auto min = *std::min_element( begin(), end() );
         auto max = *std::max_element( begin(), end() );
 
-        float inv_dynamic = nb_bins/( max - min );
+        float inv_dynamic = nb_bins / static_cast<float>( max - min );
         std::array<std::size_t,nb_bins> hist{}; // zero init
         std::for_each( begin(), end(), [&]( const T& val )
             {
                 ++hist[ val == max ? nb_bins-1 :
-                	static_cast<std::size_t>((val-min)*inv_dynamic) ];
+                	static_cast<std::size_t>( (val-min) * inv_dynamic) ];
             });
 
         return hist;
@@ -427,8 +427,8 @@ public:
         tinymage<T> output( m_width, m_height, pad_val );
 
         // define the center of the image, which is the center of rotation.
-        auto vertical_center = m_width / 2;
-        auto horizontal_center = m_height / 2;
+        auto vertical_center = static_cast<float>( m_width / 2 );
+        auto horizontal_center = static_cast<float>( m_height / 2 );
 
         // loop through each pixel of the new image, select the new vertical
         // and horizontal positions, and interpolate the image to make the change.
@@ -445,16 +445,17 @@ public:
 
             // figure out the four locations (and then, four pixels)
             // that we must interpolate from the original image.
-            auto top = static_cast<std::size_t>( std::floor( vertical_position ) );
+            auto top = static_cast<std::ptrdiff_t>( std::floor( vertical_position ) );
             auto bottom = top + 1;
-            auto left = static_cast<std::size_t>( std::floor( horizontal_position ) );
+            auto left = static_cast<std::ptrdiff_t>( std::floor( horizontal_position ) );
             auto right = left + 1;
 
             // check if any of the four locations are invalid. If they are,
             // skip interpolating this pixel. Otherwise, interpolate the
             // pixel according to the dimensions set above and set the
             // resulting pixel.
-            if ( top >= 0 && bottom < m_width && left >= 0 && right < m_height )
+            if ( top >= 0 && bottom < static_cast<std::ptrdiff_t>( m_width ) && 
+				left >= 0 && right < static_cast<std::ptrdiff_t>( m_height ) )
             {
                 output.at( x, y ) = _bilinear_interpolation( top, bottom,
                     left, right, horizontal_position, vertical_position );
@@ -551,7 +552,7 @@ private:
         return static_cast<int>( std::round( result ) );
     }
 
-    T _bilinear_interpolation(  std::size_t top, std::size_t bottom, std::size_t left, std::size_t right,
+    T _bilinear_interpolation(  std::ptrdiff_t top, std::ptrdiff_t bottom, std::ptrdiff_t left, std::ptrdiff_t right,
                                 float horizontal_position, float vertical_position )
     {
         // figure out "how far" the output pixel being considered is between *_left and *_right.
