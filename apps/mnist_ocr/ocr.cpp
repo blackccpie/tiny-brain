@@ -132,7 +132,7 @@ private:
         // TODO : not very proud of the efficiency of this code section...
         // still it is temporary, as computing a mean image would also makes sense!
 
-        auto i{0}, l{0};
+        auto i = 0, l = 0;
         auto max = std::numeric_limits<float>::min();
         for ( const auto& res : vec_res )
         {
