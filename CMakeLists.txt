@@ -38,6 +38,8 @@ if (USE_EMSCRIPTEN)
 
 else ()
 
+	set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wall -Wpedantic -Wno-narrowing")
+
 	include(CheckCXXCompilerFlag)
 	check_cxx_compiler_flag("-msse3" COMPILER_HAS_SSE_FLAG)
 	check_cxx_compiler_flag("-mavx"  COMPILER_HAS_AVX_FLAG)
