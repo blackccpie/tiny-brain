@@ -105,7 +105,8 @@ public:
 
     bool save_png( const std::string& img_path )
     {
-        return stbi_write_png( img_path.c_str(), m_width, m_height, 1, data(), m_width*sizeof(T));
+        return stbi_write_png( img_path.c_str(), static_cast<int>( m_width ), static_cast<int>( m_height ), 1, 
+			data(), static_cast<int>( m_width * sizeof(T) ) ) != 0;
     }
 
     std::size_t width() const { return m_width; }
@@ -161,7 +162,7 @@ public:
 
         std::for_each( begin(), end(), [&]( T& val )
             {
-                val = min + ( out_dyn * ( val - cur_min ) / cur_dyn );
+                val = static_cast<T>( min + ( out_dyn * ( val - cur_min ) / cur_dyn ) );
             });
     }
 
@@ -182,7 +183,7 @@ public:
 
         std::for_each( output.begin(), output.end(), [&]( T& val )
             {
-                val = min + ( out_dyn * ( val - cur_min ) / cur_dyn );
+                val = static_cast<T>( min + ( out_dyn * ( val - cur_min ) / cur_dyn ) );
             });
 
         return output;
@@ -283,7 +284,8 @@ public:
     tinymage_if_uchar<U> get_resize( std::size_t nsx, std::size_t nsy )
     {
         tinymage<T> output( nsx, nsy );
-        stbir_resize_uint8( data(), m_width, m_height, 0, output.data(), nsx, nsy, 0, 1 );
+        stbir_resize_uint8( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0, 
+			output.data(), static_cast<int>(nsx), static_cast<int>(nsy), 0, 1);
         return output;
     }
 
@@ -291,7 +293,8 @@ public:
     tinymage_if_float<U> get_resize( std::size_t nsx, std::size_t nsy )
     {
         tinymage<T> output( nsx, nsy );
-        stbir_resize_float( data(), m_width, m_height, 0, output.data(), nsx, nsy, 0, 1 );
+        stbir_resize_float( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0, 
+			output.data(), static_cast<int>( nsx ), static_cast<int>( nsy ), 0, 1 );
         return output;
     }
 
@@ -422,15 +425,15 @@ public:
         tinymage<T> output( m_width, m_height, pad_val );
 
         // define the center of the image, which is the center of rotation.
-        auto vertical_center = std::floor( m_width / 2 );
-        auto horizontal_center = std::floor( m_height / 2 );
+        auto vertical_center = m_width / 2;
+        auto horizontal_center = m_height / 2;
 
         // loop through each pixel of the new image, select the new vertical
         // and horizontal positions, and interpolate the image to make the change.
         tinymage_forXY( output, x, y )
         {
             // figure out how rotated we want the image.
-            auto _rad = angle * m_pi / 180.;
+            auto _rad = angle * m_pi / 180.f;
             auto vertical_position = std::cos( _rad ) *
                 ( x - vertical_center ) + std::sin( _rad ) * ( y - horizontal_center )
                 + vertical_center;
@@ -440,9 +443,9 @@ public:
 
             // figure out the four locations (and then, four pixels)
             // that we must interpolate from the original image.
-            auto top = std::floor( vertical_position );
+            auto top = static_cast<std::size_t>( std::floor( vertical_position ) );
             auto bottom = top + 1;
-            auto left = std::floor( horizontal_position );
+            auto left = static_cast<std::size_t>( std::floor( horizontal_position ) );
             auto right = left + 1;
 
             // check if any of the four locations are invalid. If they are,
@@ -451,7 +454,7 @@ public:
             // resulting pixel.
             if ( top >= 0 && bottom < m_width && left >= 0 && right < m_height )
             {
-                output.at( x, y ) = _bilinear_interpolation(top, bottom,
+                output.at( x, y ) = _bilinear_interpolation( top, bottom,
                     left, right, horizontal_position, vertical_position );
             }
         }
@@ -462,7 +465,7 @@ public:
     void display() const
     {
 #ifdef USE_CIMG
-        cimg_library::CImg<T> cimg( data(), m_width, m_height, 1, 1, true/*shared*/ );
+        cimg_library::CImg<T> cimg( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 1, 1, true/*shared*/ );
         cimg.display();
 #else
         // NOT IMPLEMENTED YET
@@ -475,11 +478,11 @@ private:
 
     constexpr static T m_zero{ 0 };
     constexpr static T m_one{ 1 };
-	constexpr static double m_pi{ 3.14159265358979323846 };
+	constexpr static float m_pi{ 3.14159265358979323846f };
 
 	// gcc does compile this, but acos being constexpr compatible is not in the standard!
 	// https://stackoverflow.com/questions/32814678/constexpr-compile-error-with-clang-not-g
-    // constexpr static double m_pi{ std::acos( -1. ) };
+    // constexpr static float m_pi{ std::acos( -1.f ) };
 
 private:
 
@@ -489,7 +492,7 @@ private:
         std::array<std::size_t,length> data2;
         std::size_t mode=0, maxCount=0;
         for ( auto i=std::size_t(0); i<length; i++ ) {
-            data2[i] = std::round<std::size_t>( data[i] );
+            data2[i] = data[i];
             if ( data2[i]>maxCount ) {
                 maxCount = data2[i];
                 mode = i;
@@ -541,12 +544,12 @@ private:
             }
             result = (sum1/sum2 + sum3/sum4)/2.0;
             movingIndex++;
-        } while ((movingIndex+1)<=result && movingIndex<max-1);
+        } while ( ( movingIndex + 1 ) <= result && movingIndex < max - 1 );
         data[0]= count0; data[maxValue]=countMax;
-        return std::round<int>(result);
+        return static_cast<int>( std::round( result ) );
     }
 
-    T _bilinear_interpolation(  int top, int bottom, int left, int right,
+    T _bilinear_interpolation(  std::size_t top, std::size_t bottom, std::size_t left, std::size_t right,
                                 float horizontal_position, float vertical_position )
     {
         // figure out "how far" the output pixel being considered is between *_left and *_right.
