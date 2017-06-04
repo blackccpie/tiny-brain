@@ -257,7 +257,7 @@ public:
     {
         // Only default dirichlet condition is managed for now
 
-        assert( nsx > m_width && nsy > m_height );
+        assert( nsx >= m_width && nsy >= m_height );
         assert( centering_x <= 1.f && centering_x >= 0.f );
         assert( centering_y <= 1.f && centering_y >= 0.f );
 
@@ -475,8 +475,11 @@ private:
 
     constexpr static T m_zero{ 0 };
     constexpr static T m_one{ 1 };
+	constexpr static double m_pi{ 3.14159265358979323846 };
 
-    constexpr static double m_pi{ std::acos( -1. ) };
+	// gcc does compile this, but acos being constexpr compatible is not in the standard!
+	// https://stackoverflow.com/questions/32814678/constexpr-compile-error-with-clang-not-g
+    // constexpr static double m_pi{ std::acos( -1. ) };
 
 private:
 
