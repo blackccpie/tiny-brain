@@ -25,11 +25,16 @@ THE SOFTWARE.
 #include "ocr_wrapper.h"
 #include "ocr.h"
 
+#include "tiny_brain/tinymage.h"
+
 class ocr_wrapper::ocr_wrapper_impl
 {
 public:
     ocr_wrapper_impl() {}
-    void process() {}
+    void process( const tinymage<float>& img )
+    {
+        m_ocr.process( img );
+    }
 private:
     ocr_helper m_ocr;
 };
@@ -45,5 +50,7 @@ ocr_wrapper::~ocr_wrapper()
 
 void ocr_wrapper::process()
 {
-    m_pimpl->process();
+    tinymage<float> img;
+    img.load( "./ocr/images/123456.png" );
+    m_pimpl->process( img );
 }

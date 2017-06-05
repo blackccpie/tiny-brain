@@ -38,10 +38,11 @@ else ()
         set(extra_link_libs X11)
 	endif ()
 
+    set(extra_sources main.cpp)
+
 endif ()
 
 set (sources_list
-main.cpp
 ocr.cpp
 ${extra_sources}
 )

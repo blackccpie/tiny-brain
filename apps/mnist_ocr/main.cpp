@@ -22,23 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "tiny_brain/tinymage.h"
-
 #include "ocr.h"
+
+#include "tiny_brain/tinymage.h"
 
 #include <iostream>
 
 int main( int argc, char **argv )
 {
     tinymage<float> img;
-
-#ifdef __EMSCRIPTEN__
-    std::cout << "--> Running mnist_ocr as webassembly" << std::endl;
-    img.load( "./ocr/images/123456.png" );
-#else
     img.load( "../../data/ocr/images/123456.png" );
     img.display();
-#endif
 
     ocr_helper ocr_h;
     ocr_h.process( img );
