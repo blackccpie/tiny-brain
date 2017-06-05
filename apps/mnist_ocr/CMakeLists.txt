@@ -25,8 +25,12 @@ project (mnist_ocr)
 
 if (USE_EMSCRIPTEN)
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} -s WASM=1 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} --bind -s WASM=1 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
+
+    add_definitions( -DCNN_SINGLE_THREAD )
+
+    set(extra_sources ocr_wrapper.cpp ocr_embind.cpp)
 
 else ()
 
@@ -39,6 +43,7 @@ endif ()
 set (sources_list
 main.cpp
 ocr.cpp
+${extra_sources}
 )
 
 add_executable(mnist_ocr ${sources_list} ${headers_list})
@@ -48,4 +53,23 @@ target_link_libraries(mnist_ocr
     ${extra_link_libs}
 )
 
-cotire(mnist_ocr)
+install(
+    TARGETS mnist_ocr
+    DESTINATION mnist_ocr
+)
+
+if (USE_EMSCRIPTEN)
+    install(
+        FILES
+        ${CMAKE_SOURCE_DIR}/bin/mnist_ocr.wasm
+        ${CMAKE_SOURCE_DIR}/bin/mnist_ocr.data
+        index.html
+        run.sh
+    	DESTINATION mnist_ocr
+    )
+endif ()
+
+# TODO : still no clue about why cotire and emscripten seem incompatible
+if (NOT USE_EMSCRIPTEN)
+    cotire(mnist_ocr)
+endif ()
