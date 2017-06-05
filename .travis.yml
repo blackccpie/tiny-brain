@@ -26,6 +26,11 @@ branches:
   only:
     - master
 
+notifications:
+  email:
+    on_success: never # default: change
+    on_failure: always # default: always
+
 script:
     # Export CC and CXX to tell cmake which compiler to use
     - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$CXX" == "g++" ]; then
