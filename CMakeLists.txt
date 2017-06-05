@@ -83,5 +83,7 @@ include_directories(
 	"${CMAKE_SOURCE_DIR}/tiny-dnn/third_party"
 )
 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/installation")
+
 add_subdirectory(apps)
 add_subdirectory(tests)
