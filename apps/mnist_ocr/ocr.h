@@ -41,8 +41,8 @@ public:
     };
 
 public:
-    ocr_helper( tiny_dnn::network<tiny_dnn::sequential>& net_manager );
-    virtual ~ocr_helper(); // Implement (with an empty body) where pimpl is complete
+    ocr_helper();
+    virtual ~ocr_helper();
 
     void process( const tinymage<float>& img );
 

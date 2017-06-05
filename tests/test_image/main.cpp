@@ -29,7 +29,7 @@ THE SOFTWARE.
 int main( int argc, char **argv )
 {
     tinymage<float> img;
-    img.load( "../data/ocr/123456.png" );
+    img.load( "../data/ocr/images/123456.png" );
     img.display();
 
     tinymage<float> rotated = img.get_rotate( 30.f );

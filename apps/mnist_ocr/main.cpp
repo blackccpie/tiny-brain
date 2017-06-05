@@ -34,17 +34,13 @@ int main( int argc, char **argv )
 
 #ifdef __EMSCRIPTEN__
     std::cout << "--> Running mnist_ocr as webassembly" << std::endl;
-    img.load( "./ocr/123456.png" );
+    img.load( "./ocr/images/123456.png" );
 #else
-    img.load( "../data/ocr/123456.png" );
+    img.load( "../../data/ocr/images/123456.png" );
     img.display();
 #endif
 
-    using namespace tiny_dnn;
-    network<sequential> nn;
-    nn.load( "kaggle-mnist-model" );
-
-    ocr_helper ocr_h( nn );
+    ocr_helper ocr_h;
     ocr_h.process( img );
 
     //auto& cropped_numbers = ocr_h.cropped_numbers();

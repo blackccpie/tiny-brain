@@ -35,8 +35,14 @@ using namespace tiny_dnn;
 class ocr_helper::ocr_helper_impl
 {
 public:
-    ocr_helper_impl( network<sequential>& net_manager )
-        : m_net_manager( net_manager ) {}
+    ocr_helper_impl()
+    {
+#ifdef __EMSCRIPTEN__
+        m_net_manager.load( "./ocr/models/kaggle-mnist-model" );
+#else
+        m_net_manager.load( "../../data/ocr/models/kaggle-mnist-model" );
+#endif
+    }
 
     void process( const tinymage<float>& img )
     {
@@ -360,11 +366,11 @@ private:
 
     std::vector<ocr_helper::reco> m_recognitions;
     tinymage<float> m_cropped_numbers;
-    network<sequential>& m_net_manager;
+    network<sequential> m_net_manager;
 };
 
-ocr_helper::ocr_helper( network<sequential>& net_manager )
-    : m_pimpl( new ocr_helper_impl( net_manager ) )
+ocr_helper::ocr_helper()
+    : m_pimpl( std::make_unique<ocr_helper_impl>() )
 {
 }
 
