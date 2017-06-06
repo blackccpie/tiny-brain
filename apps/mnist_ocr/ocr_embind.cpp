@@ -23,6 +23,7 @@ THE SOFTWARE.
 */
 
 #include <emscripten/bind.h>
+#include <emscripten/em_asm.h>
 using namespace emscripten;
 
 #include "ocr_wrapper.h"
@@ -31,6 +32,11 @@ using namespace emscripten;
 EMSCRIPTEN_BINDINGS(mnist_ocr)
 {
     class_<ocr_wrapper>("ocr_wrapper")
-        .constructor<>()
+        .constructor()
         .function("process", &ocr_wrapper::process);
+}
+
+int main()
+{
+    EM_ASM( allReady() );
 }
