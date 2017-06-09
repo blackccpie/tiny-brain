@@ -64,6 +64,7 @@ if (USE_EMSCRIPTEN)
         FILES
         ${CMAKE_SOURCE_DIR}/bin/mnist_ocr.wasm
         ${CMAKE_SOURCE_DIR}/bin/mnist_ocr.data
+        ${CMAKE_SOURCE_DIR}/data/ocr/images/123456.png
         index.html
         run.sh
     	DESTINATION mnist_ocr
