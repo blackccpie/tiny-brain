@@ -23,18 +23,14 @@
         image.onload=function(){
             context.drawImage(image,0,0,canvas.width,canvas.height);
 
-            var numBytes = canvas.width * canvas.height * 1;
+            var numBytes = canvas.width * canvas.height * 4;
             var ptr = Module._malloc(numBytes);
-            //var dataTrg = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+            var dataTrg = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
 
             var dataSrc = context.getImageData(0,0,canvas.width,canvas.height);
 
-            var luma;
-
-            // convert by iterating over each pixel each representing RGBA
-            for(i=0, j=0; i < canvas.width*canvas.height; i += 4, j+= 1) {
-                ptr[j] = dataSrc[i] * 0.2126 + dataSrc[i+1] * 0.7152 + dataSrc[i+2] * 0.0722;
-            }
+            // copy data into heapBytes
+            dataTrg.set(new Uint8Array(dataSrc.data));
 
             var image_infos = { ptr : ptr, sizeX : canvas.width, sizeY : canvas.height };
 
@@ -47,7 +43,8 @@
 	}
 
     function onProcessed() {
-        console.log('processed!')
+        console.log('processed!');
+        console.log('found ' + ocr_wrapper.reco_string());
     }
 
 	</script>

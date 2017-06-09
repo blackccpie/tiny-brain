@@ -34,7 +34,8 @@ EMSCRIPTEN_BINDINGS(mnist_ocr)
 {
     class_<ocr_wrapper>( "ocr_wrapper" )
         .constructor()
-        .function( "process", &ocr_wrapper::process );
+        .function( "process", &ocr_wrapper::process )
+        .function( "reco_string", &ocr_wrapper::reco_string );
 }
 
 int main()

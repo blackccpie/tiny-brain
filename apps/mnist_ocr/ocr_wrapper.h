@@ -34,7 +34,7 @@ public:
     ocr_wrapper();
     virtual ~ocr_wrapper();
     void process( emscripten::val image, emscripten::val onComplete );
-
+    std::string reco_string();
 private:
 
     class ocr_wrapper_impl;

@@ -38,6 +38,10 @@ public:
     {
         m_ocr.process( img );
     }
+    std::string reco_string()
+    {
+        return m_ocr.reco_string();
+    }
 private:
     ocr_helper m_ocr;
 };
@@ -58,11 +62,23 @@ void ocr_wrapper::process( emscripten::val image, emscripten::val onComplete )
     auto sy = image["sizeY"].as<int>();
 
     std::cout << "ocr_wrapper::process - " << sx << "x" << sy << " bytes @" << reinterpret_cast<int>( ptr ) << std::endl;
-    for ( int i=0; i<1000; i++) std::cout << (int)ptr[i]<< " ";
 
-    tinymage<float> img( ptr, sx, sy, 1 );
+    tinymage<float> img( sx, sy );
+
+    // image pointer is RGBA formatted
+    size_t i=0;
+    img.apply( [&]( float& val ) {
+        val =  ptr[i] * 0.2126f + ptr[i+1] * 0.7152f + ptr[i+2] * 0.0722f;
+        i+=4;
+    });
+
     //img.load( "./ocr/images/123456.png" );
     m_pimpl->process( img );
 
     onComplete();
+}
+
+std::string ocr_wrapper::reco_string()
+{
+    return m_pimpl->reco_string();
 }
