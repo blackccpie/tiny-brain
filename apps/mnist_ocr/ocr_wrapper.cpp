@@ -27,6 +27,9 @@ THE SOFTWARE.
 
 #include "tiny_brain/tinymage.h"
 
+#include <emscripten/bind.h>
+using namespace emscripten;
+
 class ocr_wrapper::ocr_wrapper_impl
 {
 public:
@@ -48,8 +51,13 @@ ocr_wrapper::~ocr_wrapper()
 {
 }
 
-void ocr_wrapper::process()
+void ocr_wrapper::process( emscripten::val image, emscripten::val onComplete )
 {
+    auto ptr = reinterpret_cast<uint8_t*>( image["ptr"].as<int>() );
+    auto size = input["size"].as<int>();
+
+    std::cout << "ocr_wrapper::process - " << size << " bytes @" << reinterpret_cast<int>( ptr ) << std::endl;
+
     tinymage<float> img;
     img.load( "./ocr/images/123456.png" );
     m_pimpl->process( img );

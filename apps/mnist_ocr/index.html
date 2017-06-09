@@ -6,14 +6,32 @@
     <script type="text/javascript" src="mnist_ocr.js"></script>
 </head>
 <body>
-Check browser console.
+    Guessing this picture's digits...
+    <canvas id="canvas">your canvas loads here</canvas>
+	<script type="text/javascript">
+	function allReady() {
 
-<script type="text/javascript">
-function allReady() {
-	var instance = new Module.ocr_wrapper;
-	instance.process();
-    instance.delete();
-}
-</script>
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext('2d');
+        var image = new Image();
+        image.onload=function(){
+            context.drawImage(image,0,0,canvas.width,canvas.height);
+
+            //var imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+        };
+        image.src = "123456.png";
+
+        var numBytes = 250 * 250 * 4;
+        var ptr = Module._malloc(numBytes);
+        //var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+
+        var obj = { ptr : ptr, size : numBytes }
+
+		var instance = new Module.ocr_wrapper;
+        console.log('processing...')
+		instance.process(obj);
+    	instance.delete();
+	}
+	</script>
 </body>
 </html>

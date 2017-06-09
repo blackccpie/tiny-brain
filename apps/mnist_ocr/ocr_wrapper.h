@@ -24,6 +24,8 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <emscripten/val.h>
+
 #include <memory>
 
 class ocr_wrapper
@@ -31,7 +33,7 @@ class ocr_wrapper
 public:
     ocr_wrapper();
     virtual ~ocr_wrapper();
-    void process();
+    void process( emscripten::val input, emscripten::val onComplete );
 
 private:
 

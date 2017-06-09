@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <emscripten.h>
 #include <emscripten/bind.h>
 #include <emscripten/em_asm.h>
 using namespace emscripten;
@@ -31,9 +32,9 @@ using namespace emscripten;
 // Binding code
 EMSCRIPTEN_BINDINGS(mnist_ocr)
 {
-    class_<ocr_wrapper>("ocr_wrapper")
+    class_<ocr_wrapper>( "ocr_wrapper" )
         .constructor()
-        .function("process", &ocr_wrapper::process);
+        .function( "process", &ocr_wrapper::process, allow_raw_pointers() );
 }
 
 int main()
