@@ -34,7 +34,7 @@ EMSCRIPTEN_BINDINGS(mnist_ocr)
 {
     class_<ocr_wrapper>( "ocr_wrapper" )
         .constructor()
-        .function( "process", &ocr_wrapper::process, allow_raw_pointers() );
+        .function( "process", &ocr_wrapper::process );
 }
 
 int main()

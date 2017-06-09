@@ -33,7 +33,7 @@ class ocr_wrapper
 public:
     ocr_wrapper();
     virtual ~ocr_wrapper();
-    void process( emscripten::val input, emscripten::val onComplete );
+    void process( emscripten::val image, emscripten::val onComplete );
 
 private:
 

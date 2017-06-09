@@ -54,11 +54,15 @@ ocr_wrapper::~ocr_wrapper()
 void ocr_wrapper::process( emscripten::val image, emscripten::val onComplete )
 {
     auto ptr = reinterpret_cast<uint8_t*>( image["ptr"].as<int>() );
-    auto size = input["size"].as<int>();
+    auto sx = image["sizeX"].as<int>();
+    auto sy = image["sizeY"].as<int>();
 
-    std::cout << "ocr_wrapper::process - " << size << " bytes @" << reinterpret_cast<int>( ptr ) << std::endl;
+    std::cout << "ocr_wrapper::process - " << sx << "x" << sy << " bytes @" << reinterpret_cast<int>( ptr ) << std::endl;
+    for ( int i=0; i<1000; i++) std::cout << (int)ptr[i]<< " ";
 
-    tinymage<float> img;
-    img.load( "./ocr/images/123456.png" );
+    tinymage<float> img( ptr, sx, sy, 1 );
+    //img.load( "./ocr/images/123456.png" );
     m_pimpl->process( img );
+
+    onComplete();
 }
