@@ -7,7 +7,8 @@
 </head>
 <body>
     Guessing this picture's digits...
-    <canvas id="canvas">your canvas loads here</canvas>
+    <canvas id="canvas_ocr">your canvas loads here</canvas>
+    <label id="digits"></label>
 	<script type="text/javascript">
 
     var ocr_wrapper;
@@ -28,11 +29,17 @@
 
         ocr_wrapper = new Module.ocr_wrapper;
 
-        var canvas = document.getElementById("canvas");
+        var canvas = document.getElementById("canvas_ocr");
         var context = canvas.getContext('2d');
         var image = new Image();
 
         image.onload=function(){
+
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+
+            console.log( 'natural image size is ' + image.naturalWidth + 'x' + image.naturalHeight );
+
             context.drawImage(image,0,0,canvas.width,canvas.height);
 
             var numBytes = canvas.width * canvas.height * 4;
@@ -56,7 +63,9 @@
 
     function onProcessed() {
         console.log('processed!');
-        console.log('found ' + ocr_wrapper.reco_string());
+        var rec = ocr_wrapper.reco_string();
+        console.log('found ' + rec);
+        document.getElementById('digits').innerHTML = 'might be ' + rec + '!';
     }
 
 	</script>
