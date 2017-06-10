@@ -4,14 +4,44 @@
     <meta charset="UTF-8">
     <title>EM Test</title>
     <script type="text/javascript" src="mnist_ocr.js"></script>
+    <style>
+        .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+        textarea.emscripten { font-family: monospace; width: 80%; }
+        div.emscripten { text-align: center; }
+    </style>
 </head>
-<body>
+<body bgcolor="#EFF5FB">
     Guessing this picture's digits...
     <canvas id="canvas_ocr">your canvas loads here</canvas>
     <label id="digits"></label>
+
+    <hr/>
+    <textarea class="emscripten" id="output" rows="8"></textarea>
+    <hr/>
+
 	<script type="text/javascript">
 
     var ocr_wrapper;
+
+    function _configureModule(){
+        Module['print'] = (function() {
+            var element = document.getElementById('output');
+            if (element) element.value = ''; // clear browser cache
+            return function(text) {
+                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                // These replacements are necessary if you render to raw HTML
+                //text = text.replace(/&/g, "&amp;");
+                //text = text.replace(/</g, "&lt;");
+                //text = text.replace(/>/g, "&gt;");
+                //text = text.replace('\n', '<br>', 'g');
+                console.log(text);
+                if (element) {
+                    element.value += text + "\n";
+                    element.scrollTop = element.scrollHeight; // focus on bottom
+                }
+            };
+        })();
+    }
 
     function _arrayToHeap(typedArray){
         var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
@@ -26,6 +56,8 @@
     }
 
 	function allReady() {
+
+        _configureModule();
 
         ocr_wrapper = new Module.ocr_wrapper;
 
