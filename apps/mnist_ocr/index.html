@@ -12,6 +12,18 @@
 
     var ocr_wrapper;
 
+    function _arrayToHeap(typedArray){
+        var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
+        var ptr = Module._malloc(numBytes);
+        var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+        heapBytes.set(new Uint8Array(typedArray.buffer));
+        return heapBytes;
+    }
+
+    function _freeArray(heapBytes){
+        Module._free(heapBytes.byteOffset);
+    }
+
 	function allReady() {
 
         ocr_wrapper = new Module.ocr_wrapper;
@@ -28,16 +40,16 @@
             var dataTrg = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
 
             var dataSrc = context.getImageData(0,0,canvas.width,canvas.height);
+            var dataTrg = _arrayToHeap(dataSrc.data);
 
-            // copy data into heapBytes
-            dataTrg.set(new Uint8Array(dataSrc.data));
+            var image_infos = { ptr : dataTrg.byteOffset, sizeX : canvas.width, sizeY : canvas.height };
 
-            var image_infos = { ptr : ptr, sizeX : canvas.width, sizeY : canvas.height };
-
-            console.log('processing...')
+            console.log('processing...');
 
             ocr_wrapper.process(image_infos,onProcessed);
             ocr_wrapper.delete();
+
+            _freeArray(dataTrg);
         };
         image.src = "123456.png";
 	}
