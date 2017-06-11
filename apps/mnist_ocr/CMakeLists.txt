@@ -26,7 +26,7 @@ project (mnist_ocr)
 if (USE_EMSCRIPTEN)
 
     # NO_EXIT_RUNTIME is here to have std::cout available event after main has finished
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -O3 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
 
     # no WebAssembly multi-threading support for now
