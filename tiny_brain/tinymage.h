@@ -141,14 +141,7 @@ public:
     tinymage<R> convert() const
     {
         tinymage<R> output( m_width, m_height, 0 );
-        auto output_iter = output.begin();
-
-        std::for_each( begin(), end(), [&]( const T& val )
-            {
-                *output_iter = static_cast<R>( val );
-                output_iter++;
-            });
-
+        output.assign( begin(), end() );
         return output;
     }
 
