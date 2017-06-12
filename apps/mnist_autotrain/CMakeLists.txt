@@ -41,4 +41,9 @@ target_link_libraries(mnist_autotrainer
     pthread
 )
 
+install(
+    TARGETS mnist_autotrainer
+    DESTINATION mnist_autotrainer
+)
+
 cotire(mnist_autotrainer)
