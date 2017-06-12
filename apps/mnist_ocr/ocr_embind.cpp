@@ -32,9 +32,14 @@ using namespace emscripten;
 // Binding code
 EMSCRIPTEN_BINDINGS(mnist_ocr)
 {
+    register_vector<size_t>("VectorSizeT");
+    register_vector<uint8_t>("VectorUInt8");
+
     class_<ocr_wrapper>( "ocr_wrapper" )
         .constructor()
         .function( "process", &ocr_wrapper::process )
+        .function( "cropped_numbers", &ocr_wrapper::cropped_numbers )
+        .function( "cropped_size", &ocr_wrapper::cropped_size )
         .function( "reco_string", &ocr_wrapper::reco_string );
 }
 

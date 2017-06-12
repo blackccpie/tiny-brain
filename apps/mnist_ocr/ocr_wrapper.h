@@ -34,6 +34,8 @@ public:
     ocr_wrapper();
     virtual ~ocr_wrapper();
     void process( emscripten::val image, emscripten::val onComplete );
+    std::vector<size_t> cropped_size();
+    std::vector<uint8_t> cropped_numbers();
     std::string reco_string();
 private:
 

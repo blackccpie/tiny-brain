@@ -38,6 +38,10 @@ public:
     {
         m_ocr.process( img );
     }
+    const tinymage<float>& cropped_numbers()
+    {
+        return m_ocr.cropped_numbers();
+    }
     std::string reco_string()
     {
         return m_ocr.reco_string();
@@ -76,6 +80,19 @@ void ocr_wrapper::process( emscripten::val image, emscripten::val onComplete )
     m_pimpl->process( img );
 
     onComplete();
+}
+
+std::vector<size_t> ocr_wrapper::cropped_size()
+{
+    auto& cropped = m_pimpl->cropped_numbers();
+    std::cout << "ocr_wrapper::cropped_size - " << cropped.width() << "x" << cropped.height() << std::endl;
+    return { { cropped.width(), cropped.height() } };
+}
+
+std::vector<uint8_t> ocr_wrapper::cropped_numbers()
+{
+    auto output = m_pimpl->cropped_numbers().convert<uint8_t>();
+    return std::vector<uint8_t>( output.data(), output.data() + output.size() );
 }
 
 std::string ocr_wrapper::reco_string()

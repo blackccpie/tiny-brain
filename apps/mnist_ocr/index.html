@@ -5,18 +5,31 @@
     <title>EM Test</title>
     <script type="text/javascript" src="mnist_ocr.js"></script>
     <style>
+		body { background: black; color:#CCCCCC; }
         .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
         textarea.emscripten { font-family: monospace; width: 80%; }
         div.emscripten { text-align: center; }
     </style>
 </head>
 <body bgcolor="#EFF5FB">
-    Guessing this picture's digits...
-    <canvas id="canvas_ocr">your canvas loads here</canvas>
-    <label id="digits"></label>
+
+    <div>
+    	Guessing this picture's digits...
+    	<canvas id="canvas_ocr">your canvas loads here</canvas>
+    </div>
 
     <hr/>
+
+    <div>
+        This is the digits crop...
+        <canvas id="canvas_cropped">your cropped canvas loads here</canvas>
+    	<label id="digits"></label>
+    </div>
+
+    <hr/>
+
     <textarea class="emscripten" id="output" rows="8"></textarea>
+
     <hr/>
 
 	<script type="text/javascript">
@@ -61,44 +74,66 @@
 
         ocr_wrapper = new Module.ocr_wrapper;
 
-        var canvas = document.getElementById("canvas_ocr");
-        var context = canvas.getContext('2d');
         var image = new Image();
 
         image.onload=function(){
 
-            canvas.width = image.naturalWidth;
-            canvas.height = image.naturalHeight;
+            var canvas_ocr = document.getElementById("canvas_ocr");
+            var context_ocr = canvas_ocr.getContext('2d');
+
+            canvas_ocr.width = image.naturalWidth;
+            canvas_ocr.height = image.naturalHeight;
 
             console.log( 'natural image size is ' + image.naturalWidth + 'x' + image.naturalHeight );
 
-            context.drawImage(image,0,0,canvas.width,canvas.height);
+            context_ocr.drawImage(image,0,0,canvas_ocr.width,canvas_ocr.height);
 
-            var numBytes = canvas.width * canvas.height * 4;
-            var ptr = Module._malloc(numBytes);
+            var numBytes = canvas_ocr.width * canvas_ocr.height * 4;
+            var ptr = Module._malloc(numBytes); // heap allocated memory is accessible from emscripten C++
             var dataTrg = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
 
-            var dataSrc = context.getImageData(0,0,canvas.width,canvas.height);
+            var dataSrc = context_ocr.getImageData(0,0,canvas_ocr.width,canvas_ocr.height);
             var dataTrg = _arrayToHeap(dataSrc.data);
 
-            var image_infos = { ptr : dataTrg.byteOffset, sizeX : canvas.width, sizeY : canvas.height };
+            var image_infos = { ptr : dataTrg.byteOffset, sizeX : canvas_ocr.width, sizeY : canvas_ocr.height };
 
             console.log('processing...');
 
-            ocr_wrapper.process(image_infos,onProcessed);
-            ocr_wrapper.delete();
+            ocr_wrapper.process(image_infos,function onProcessed() {
+
+                console.log('processed!');
+
+                var rec = ocr_wrapper.reco_string();
+                console.log('found ' + rec);
+                document.getElementById('digits').innerHTML = 'might be ' + rec + '!';
+
+                var canvas_cropped = document.getElementById("canvas_cropped");
+                var context_cropped = canvas_cropped.getContext('2d');
+
+                var cropped = ocr_wrapper.cropped_numbers();
+                var cropped_size = ocr_wrapper.cropped_size();
+                canvas_cropped.width = cropped_size.get(0);
+                canvas_cropped.height = cropped_size.get(1);
+                context_cropped.drawImage(image,0,0,canvas_cropped.width,canvas_cropped.height);
+
+                var dataTrg = context_cropped.getImageData(0,0,canvas_cropped.width,canvas_cropped.height);
+                var data = dataTrg.data;
+                //console.log('debug ' + cropped.get(50+(50*canvas_cropped.width)))
+                for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
+                    var avg = cropped.get(j) ? 255 : 50;
+                    data[i]     = avg; // red
+                    data[i + 1] = avg; // green
+                    data[i + 2] = avg; // blue
+                }
+                context_cropped.putImageData(dataTrg, 0, 0);
+            });
+
+            //ocr_wrapper.delete();
 
             _freeArray(dataTrg);
         };
         image.src = "123456.png";
 	}
-
-    function onProcessed() {
-        console.log('processed!');
-        var rec = ocr_wrapper.reco_string();
-        console.log('found ' + rec);
-        document.getElementById('digits').innerHTML = 'might be ' + rec + '!';
-    }
 
 	</script>
 </body>
