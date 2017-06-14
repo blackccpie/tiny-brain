@@ -14,7 +14,7 @@ After spending more than a year working on a from scratch deep learning C++ stac
 
 -----------------
 
-*** Cloning ***
+****Cloning****
 
 tiny-brain includes tiny-dnn as a _git submodule_, therefore use the following command line for recursive cloning:
 
