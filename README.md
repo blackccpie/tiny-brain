@@ -1,4 +1,4 @@
-**tiny-brain**
+# tiny-brain
 
 ::: tiny-dnn based C++ deep learning applications :::
 
