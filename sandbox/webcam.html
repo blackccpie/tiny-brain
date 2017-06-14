@@ -1,25 +1,29 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <meta charset=utf-8/>
+        <meta charset=utf-8 />
         <style>
           body {
             background: black;
             color:#CCCCCC;
           }
-          #c2 {
+          #c1 {
             background-image: url(foo.png);
             background-repeat: no-repeat;
           }
           div {
             float: left;
             border :1px solid #444444;
-            padding:10px;
-            margin: 10px;
+            padding:5px;
+            margin: 5px;
             background:#3B3B3B;
           }
         </style>
         <script type="text/javascript;version=1.8">
+
+            var deltaArray = new Array(50);
+            var lastCalledTime;
+
             let processor = {
                 timerCallback: function() {
                     if (this.video.paused || this.video.ended) {
@@ -36,12 +40,10 @@
                 this.video = document.getElementById("video");
                 this.c1 = document.getElementById("c1");
                 this.ctx1 = this.c1.getContext("2d");
-                this.c2 = document.getElementById("c2");
-                this.ctx2 = this.c2.getContext("2d");
                 let self = this;
                 this.video.addEventListener("play", function() {
-                    self.width = self.video.videoWidth / 2;
-                    self.height = self.video.videoHeight / 2;
+                    self.width = self.video.videoWidth;
+                    self.height = self.video.videoHeight;
                     self.timerCallback();
                 }, false);
             },
@@ -58,7 +60,20 @@
                     if (g > 100 && r > 100 && b < 43)
                         frame.data[i * 4 + 3] = 0;
                     }
-                this.ctx2.putImageData(frame, 0, 0);
+                this.ctx1.putImageData(frame, 0, 0);
+
+                if(!lastCalledTime) {
+                    lastCalledTime = Date.now();
+                    return;
+                }
+                deltaArray.push((Date.now() - lastCalledTime)/1000);
+                deltaArray.shift();
+                lastCalledTime = Date.now();
+                let delta = deltaArray.reduce(function(pv, cv) { return pv + cv; }, 0) / deltaArray.length;
+                let fps = Math.round(1/delta*100)/100;
+
+                this.ctx1.fillText('FPS : ' + fps,10,10);
+
                 return;
                 }
             };
@@ -71,8 +86,7 @@
             <video id="video" src="moz.ogv" controls="true"/>
         </div>
         <div>
-            <canvas id="c1" width="160" height="96"></canvas>
-            <canvas id="c2" width="160" height="96"></canvas>
+            <canvas id="c1"></canvas>
         </div>
     </body>
 </html>
