@@ -134,11 +134,13 @@ std::map<size_t,std::vector<size_t>> blob_detect( const tinymage<T> image )
                     bounds[label] = { x, y, x, y, 1 };
                 else
                 {
-                    bounds[label][0] = std::min( x, bounds[label][0] );
-                    bounds[label][1] = std::min( y, bounds[label][1] );
-                    bounds[label][2] = std::max( x, bounds[label][2] );
-                    bounds[label][3] = std::max( y, bounds[label][3] );
-                    bounds[label][4] += 1;
+                    auto& _bounds = bounds[label];
+
+                    _bounds[0] = std::min( x, _bounds[0] );
+                    _bounds[1] = std::min( y, _bounds[1] );
+                    _bounds[2] = std::max( x, _bounds[2] );
+                    _bounds[3] = std::max( y, _bounds[3] );
+                    _bounds[4] += 1;
                 }
             }
         }
@@ -158,15 +160,22 @@ int main( int argc, char **argv )
 
     for ( const auto& _bounds : bounds )
     {
-        if ( _bounds.second[4] < 100 )
+        auto w = _bounds.second[2]-_bounds.second[0];
+        auto h = _bounds.second[3]-_bounds.second[1];
+        auto ratio = static_cast<float>(w)/h;
+        auto fill_ratio = static_cast<float>(_bounds.second[4])/(w*h);
+
+        if ( _bounds.second[4] < 100 || fill_ratio < 0.5f )
             continue;
+
+        //auto cropped = img.get_crop(_bounds.second[0],_bounds.second[1],_bounds.second[2],_bounds.second[3]);
 
         std::stringstream ss;
         for ( const auto& _coord : _bounds.second )
         {
             ss << _coord << " ";
         }
-        std::cout << "label " << _bounds.first << " (" << ss.str() << ")" << std::endl;
+        std::cout << "label " << _bounds.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
     }
 
     return 0;
