@@ -25,7 +25,7 @@ project (blob)
 
 # TODO : ALLOW_MEMORY_GROWTH prevents some optimizations, try to define new total memory size
 # NO_EXIT_RUNTIME is here to have std::cout available event after main has finished
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -O3")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
 
 set (sources_list

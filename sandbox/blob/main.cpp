@@ -159,7 +159,8 @@ std::map<size_t,std::vector<size_t>> blob_detect( const tinymage<T> image )
 class blob_detector
 {
 public:
-    blob_detector( size_t sx, size_t sy ) : m_img( sx, sy ) {}
+    blob_detector( size_t sx, size_t sy ) : m_img( sx, sy ), m_output( sx, sy )
+        { std::cout << "blob_detector::blob_detector - " << sx << "x" << sy << std::endl; }
     void process( emscripten::val image )
     {
         auto ptr = reinterpret_cast<uint8_t*>( image["ptr"].as<int>() );
@@ -175,29 +176,29 @@ public:
             i+=4;
         });
 
-    		m_img.auto_threshold();
+		m_img.auto_threshold();
 
-    		m_blobs = blob_detect( m_img );
+		m_blobs = blob_detect( m_img );
 
-    		for ( const auto& _blob : m_blobs )
+		for ( const auto& _blob : m_blobs )
+		{
+    		auto w = _blob.second[2]-_blob.second[0];
+    		auto h = _blob.second[3]-_blob.second[1];
+    		auto ratio = static_cast<float>(w)/h;
+    		auto fill_ratio = static_cast<float>(_blob.second[4])/(w*h);
+
+    		if ( _blob.second[4] < 2500 || fill_ratio < 0.5f )
+        		continue;
+
+    		//auto cropped = img.get_crop(_blob.second[0],_blob.second[1],_blob.second[2],_blob.second[3]);
+
+    		std::stringstream ss;
+    		for ( const auto& _coord : _blob.second )
     		{
-        		auto w = _blob.second[2]-_blob.second[0];
-        		auto h = _blob.second[3]-_blob.second[1];
-        		auto ratio = static_cast<float>(w)/h;
-        		auto fill_ratio = static_cast<float>(_blob.second[4])/(w*h);
-
-        		if ( _blob.second[4] < 2500 || fill_ratio < 0.5f )
-            		continue;
-
-        		//auto cropped = img.get_crop(_blob.second[0],_blob.second[1],_blob.second[2],_blob.second[3]);
-
-        		std::stringstream ss;
-        		for ( const auto& _coord : _blob.second )
-        		{
-            		ss << _coord << " ";
-        		}
-        		std::cout << "label " << _blob.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
+        		ss << _coord << " ";
     		}
+    		std::cout << "label " << _blob.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
+		}
     }
     std::vector<size_t> get_blob()
     {
@@ -205,13 +206,14 @@ public:
     }
     std::vector<uint8_t> get_thresh()
     {
-        auto output = m_img.convert<uint8_t>();
-        return std::vector<uint8_t>( output.data(), output.data() + output.size() );
+        m_output = m_img.convert<uint8_t>();
+        return std::vector<uint8_t>( m_output.data(), m_output.data() + m_output.size() );
     }
 
 private:
 
     tinymage<float> m_img;
+    tinymage<uint8_t> m_output;
 
     using blobs_t = std::map<size_t,std::vector<size_t>>;
     blobs_t m_blobs;
