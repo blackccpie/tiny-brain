@@ -57,6 +57,7 @@
     }
 
     function _arrayToHeap(typedArray){
+        // heap allocated memory is accessible from emscripten C++
         var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
         var ptr = Module._malloc(numBytes);
         var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
@@ -87,10 +88,6 @@
             console.log( 'natural image size is ' + image.naturalWidth + 'x' + image.naturalHeight );
 
             context_ocr.drawImage(image,0,0,canvas_ocr.width,canvas_ocr.height);
-
-            var numBytes = canvas_ocr.width * canvas_ocr.height * 4;
-            var ptr = Module._malloc(numBytes); // heap allocated memory is accessible from emscripten C++
-            var dataTrg = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
 
             var dataSrc = context_ocr.getImageData(0,0,canvas_ocr.width,canvas_ocr.height);
             var dataTrg = _arrayToHeap(dataSrc.data);
