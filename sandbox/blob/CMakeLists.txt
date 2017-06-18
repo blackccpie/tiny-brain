@@ -23,10 +23,20 @@
 cmake_minimum_required (VERSION 3.2)
 project (blob)
 
+if (USE_EMSCRIPTEN)
+
 # TODO : ALLOW_MEMORY_GROWTH prevents some optimizations, try to define new total memory size
 # NO_EXIT_RUNTIME is here to have std::cout available event after main has finished
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -O3")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
+
+else ()
+
+    if (CIMG_FOUND)
+        set(extra_link_libs X11)
+	endif ()
+
+endif ()
 
 set (sources_list
 main.cpp
@@ -36,6 +46,7 @@ add_executable(blob ${sources_list} ${headers_list})
 
 target_link_libraries(blob
     pthread
+    ${extra_link_libs}
 )
 
 cotire(blob)

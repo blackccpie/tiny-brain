@@ -22,15 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <emscripten.h>
-#include <emscripten/bind.h>
-#include <emscripten/em_asm.h>
-using namespace emscripten;
+#ifdef __EMSCRIPTEN__
+	#include <emscripten.h>
+	#include <emscripten/bind.h>
+	#include <emscripten/em_asm.h>
+	using namespace emscripten;
+#endif
 
 #include "tiny_brain/tinymage.h"
 
 #include <sstream>
 #include <iostream>
+#include <map>
 #include <set>
 
 /* blobs.detect()
@@ -156,6 +159,7 @@ std::map<size_t,std::vector<size_t>> blob_detect( const tinymage<T> image )
    return bounds;
 }
 
+#ifdef __EMSCRIPTEN__
 class blob_detector
 {
 public:
@@ -239,3 +243,36 @@ int main( int argc, char **argv )
 {
     EM_ASM( allReady() );
 }
+#else
+int main( int argc, char **argv )
+{
+    tinymage<float> img;
+    img.load( "../sandbox/ocr_ex.png" );
+    img.auto_threshold();
+    img.display();
+
+    auto bounds = blob_detect( img );
+
+    for ( const auto& _bounds : bounds )
+    {
+        auto w = _bounds.second[2]-_bounds.second[0];
+        auto h = _bounds.second[3]-_bounds.second[1];
+        auto ratio = static_cast<float>(w)/h;
+        auto fill_ratio = static_cast<float>(_bounds.second[4])/(w*h);
+
+        if ( _bounds.second[4] < 100 || fill_ratio < 0.5f )
+            continue;
+
+        //auto cropped = img.get_crop(_bounds.second[0],_bounds.second[1],_bounds.second[2],_bounds.second[3]);
+
+        std::stringstream ss;
+        for ( const auto& _coord : _bounds.second )
+        {
+            ss << _coord << " ";
+        }
+        std::cout << "label " << _bounds.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
+    }
+
+    return 0;
+}
+#endif
