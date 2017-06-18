@@ -92,6 +92,14 @@
 
                         Module._free(work_image.byteOffset);
 
+                        // Green rectangle
+                        var blob = blob_detector.get_blob();
+                        this.ctx1.beginPath();
+                        this.ctx1.lineWidth="4";
+                        this.ctx1.strokeStyle="green";
+                        this.ctx1.rect(blob.get(0),blob.get(1),blob.get(2),blob.get(3));
+                        this.ctx1.stroke();
+
                         if(!lastCalledTime) {
                             lastCalledTime = Date.now();
                             return;

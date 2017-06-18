@@ -202,7 +202,10 @@ public:
     }
     std::vector<size_t> get_blob()
     {
-        return m_blobs.begin()->second;
+        auto& _blob = m_blobs.begin()->second;
+        auto w = _blob[2]-_blob[0];
+        auto h = _blob[3]-_blob[1];
+        return { _blob[0], _blob[1], w, h };
     }
     std::vector<uint8_t> get_thresh()
     {
@@ -228,7 +231,8 @@ EMSCRIPTEN_BINDINGS(blob)
     class_<blob_detector>( "blob_detector" )
         .constructor<size_t,size_t>()
         .function( "process", &blob_detector::process )
-        .function( "get_thresh", &blob_detector::get_thresh );
+        .function( "get_thresh", &blob_detector::get_thresh )
+        .function( "get_blob", &blob_detector::get_blob );
 }
 
 int main( int argc, char **argv )
