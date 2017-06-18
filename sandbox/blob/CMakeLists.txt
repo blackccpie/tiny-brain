@@ -23,6 +23,10 @@
 cmake_minimum_required (VERSION 3.2)
 project (blob)
 
+# NO_EXIT_RUNTIME is here to have std::cout available event after main has finished
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -O3")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
+
 set (sources_list
 main.cpp
 )
@@ -31,7 +35,6 @@ add_executable(blob ${sources_list} ${headers_list})
 
 target_link_libraries(blob
     pthread
-    X11
 )
 
 cotire(blob)

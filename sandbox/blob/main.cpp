@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <emscripten.h>
+#include <emscripten/bind.h>
+#include <emscripten/em_asm.h>
+using namespace emscripten;
+
 #include "tiny_brain/tinymage.h"
 
 #include "tiny_dnn/tiny_dnn.h"
@@ -151,32 +156,74 @@ std::map<size_t,std::vector<size_t>> blob_detect( const tinymage<T> image )
 
 int main( int argc, char **argv )
 {
-    tinymage<float> img;
-    img.load( "../sandbox/ocr_ex.png" );
-    img.auto_threshold();
-    img.display();
+    EM_ASM( allReady() );
+}
 
-    auto bounds = blob_detect( img );
-
-    for ( const auto& _bounds : bounds )
+class blob_detector
+{
+public:
+    blob_detector( size_t sx, size_t sy ) : m_img( sx, sy ) {}
+    void process( emscripten::val image )
     {
-        auto w = _bounds.second[2]-_bounds.second[0];
-        auto h = _bounds.second[3]-_bounds.second[1];
-        auto ratio = static_cast<float>(w)/h;
-        auto fill_ratio = static_cast<float>(_bounds.second[4])/(w*h);
+        auto ptr = reinterpret_cast<uint8_t*>( image["ptr"].as<int>() );
+        auto sx = image["sizeX"].as<int>();
+        auto sy = image["sizeY"].as<int>();
 
-        if ( _bounds.second[4] < 100 || fill_ratio < 0.5f )
-            continue;
+        std::cout << "blob_detector::process - " << sx << "x" << sy << " bytes @" << reinterpret_cast<int>( ptr ) << std::endl;
 
-        //auto cropped = img.get_crop(_bounds.second[0],_bounds.second[1],_bounds.second[2],_bounds.second[3]);
+        // image pointer is RGBA formatted
+        size_t i=0;
+        m_img.apply( [&]( float& val ) {
+            val =  ptr[i] * 0.2126f + ptr[i+1] * 0.7152f + ptr[i+2] * 0.0722f;
+            i+=4;
+        });
 
-        std::stringstream ss;
-        for ( const auto& _coord : _bounds.second )
-        {
-            ss << _coord << " ";
-        }
-        std::cout << "label " << _bounds.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
+    		m_img.auto_threshold();
+
+    		m_blobs = blob_detect( m_img );
+
+    		for ( const auto& _blob : m_blobs )
+    		{
+        		auto w = _blob.second[2]-_blob.second[0];
+        		auto h = _blob.second[3]-_blob.second[1];
+        		auto ratio = static_cast<float>(w)/h;
+        		auto fill_ratio = static_cast<float>(_blob.second[4])/(w*h);
+
+        		if ( _blob.second[4] < 2500 || fill_ratio < 0.5f )
+            		continue;
+
+        		//auto cropped = img.get_crop(_blob.second[0],_blob.second[1],_blob.second[2],_blob.second[3]);
+
+        		std::stringstream ss;
+        		for ( const auto& _coord : _blob.second )
+        		{
+            		ss << _coord << " ";
+        		}
+        		std::cout << "label " << _blob.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
+    		}
+    }
+    std::vector<size_t> get_blob()
+    {
+        return m_blobs.begin()->second;
+    }
+    std::vector<uint8_t> get_thresh()
+    {
+        auto output = m_img.convert<uint8_t>();
+        return std::vector<uint8_t>( output.data(), output.data() + output.size() );
     }
 
-    return 0;
+private:
+
+    tinymage<float> m_img;
+
+    using blobs_t = std::map<size_t,std::vector<size_t>>;
+    blobs_t m_blobs;
+};
+
+// Binding code
+EMSCRIPTEN_BINDINGS(mnist_ocr)
+{
+    class_<blob_detector>( "blob_detector" )
+        .constructor<size_t,size_t>()
+        .function( "process", &blob_detector::process );
 }
