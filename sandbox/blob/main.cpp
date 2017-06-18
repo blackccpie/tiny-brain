@@ -183,30 +183,36 @@ public:
 		m_img.auto_threshold();
 
 		m_blobs = blob_detect( m_img );
+        m_filtered_blobs.clear();
 
 		for ( const auto& _blob : m_blobs )
 		{
     		auto w = _blob.second[2]-_blob.second[0];
     		auto h = _blob.second[3]-_blob.second[1];
-    		auto ratio = static_cast<float>(w)/h;
+    		auto aspect_ratio = static_cast<float>(w)/h;
     		auto fill_ratio = static_cast<float>(_blob.second[4])/(w*h);
 
-    		if ( _blob.second[4] < 2500 || fill_ratio < 0.5f )
+    		if ( _blob.second[4] < 2500 || aspect_ratio < 1.25f || fill_ratio < 0.5f )
         		continue;
 
     		//auto cropped = img.get_crop(_blob.second[0],_blob.second[1],_blob.second[2],_blob.second[3]);
 
-    		std::stringstream ss;
-    		for ( const auto& _coord : _blob.second )
-    		{
-        		ss << _coord << " ";
-    		}
-    		std::cout << "label " << _blob.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
+            m_filtered_blobs.emplace_back( std::vector<size_t>{ _blob.second[0], _blob.second[1], _blob.second[2], _blob.second[3], _blob.second[4] } );
 		}
+
+        for ( const auto& _blob : m_filtered_blobs )
+        {
+            std::stringstream ss;
+            for ( const auto& _coord : _blob )
+            {
+                ss << _coord << " ";
+            }
+            std::cout << "-> blob! " << " (" << ss.str() << ")" << std::endl;
+        }
     }
     std::vector<size_t> get_blob()
     {
-        auto& _blob = m_blobs.begin()->second;
+        auto& _blob = m_filtered_blobs.front();
         auto w = _blob[2]-_blob[0];
         auto h = _blob[3]-_blob[1];
         return { _blob[0], _blob[1], w, h };
@@ -214,7 +220,7 @@ public:
     std::vector<uint8_t> get_thresh()
     {
         m_output = m_img.convert<uint8_t>();
-        return std::vector<uint8_t>( m_output.data(), m_output.data() + m_output.size() );
+        return { m_output.data(), m_output.data() + m_output.size() };
     }
 
 private:
@@ -224,6 +230,8 @@ private:
 
     using blobs_t = std::map<size_t,std::vector<size_t>>;
     blobs_t m_blobs;
+    using filt_blobs_t = std::vector<std::vector<size_t>>;
+    filt_blobs_t m_filtered_blobs;
 };
 
 // Binding code
@@ -252,25 +260,31 @@ int main( int argc, char **argv )
     img.display();
 
     auto bounds = blob_detect( img );
+    std::vector<std::vector<size_t>> filtered_bounds;
 
     for ( const auto& _bounds : bounds )
     {
         auto w = _bounds.second[2]-_bounds.second[0];
         auto h = _bounds.second[3]-_bounds.second[1];
-        auto ratio = static_cast<float>(w)/h;
+        auto aspect_ratio = static_cast<float>(w)/h;
         auto fill_ratio = static_cast<float>(_bounds.second[4])/(w*h);
 
-        if ( _bounds.second[4] < 100 || fill_ratio < 0.5f )
+        if ( _bounds.second[4] < 2500 || aspect_ratio < 1.25f || fill_ratio < 0.5f )
             continue;
 
         //auto cropped = img.get_crop(_bounds.second[0],_bounds.second[1],_bounds.second[2],_bounds.second[3]);
 
+        filtered_bounds.emplace_back( std::vector<size_t>{ _bounds.second[0], _bounds.second[1], _bounds.second[2], _bounds.second[3], _bounds.second[4] } );
+    }
+
+    for ( const auto& _bounds : filtered_bounds )
+    {
         std::stringstream ss;
-        for ( const auto& _coord : _bounds.second )
+        for ( const auto& _coord : _bounds )
         {
             ss << _coord << " ";
         }
-        std::cout << "label " << _bounds.first << " (" << ss.str() << ") ratio : " << ratio << " fill_ratio : " << fill_ratio << std::endl;
+        std::cout << "-> blob! " << " (" << ss.str() << ")" << std::endl;
     }
 
     return 0;
