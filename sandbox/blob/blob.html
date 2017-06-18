@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+          body {
+            background: black;
+            color:#CCCCCC;
+          }
+          div {
+            float: left;
+            /*border :1px solid #444444;
+            padding:5px;
+            margin: 5px;
+            background:#3B3B3B;*/
+          }
+        </style>
+        <script type="text/javascript" src="blob.js"></script>
+        <script type="text/javascript;version=1.8">
+
+            var blob_detector;
+
+            function allReady() {
+
+                console.log('allReady');
+
+                var blob_detector = new Module.blob_detector(this.video.offsetWidth,this.video.offsetHeight);
+
+                // heap allocated memory is accessible from emscripten C++
+                var numBytes = this.video.offsetWidth * this.video.offsetHeight * 4;
+                var ptr = Module._malloc(numBytes);
+                var work_image = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+
+                var deltaArray = new Array(50);
+                var lastCalledTime;
+
+                let processor = {
+                    timerCallback: function() {
+                        if (this.video.paused || this.video.ended) {
+                            return;
+                    }
+                    this.computeFrame();
+                    let self = this;
+                    setTimeout(function () {
+                        self.timerCallback();
+                    }, 0);
+                },
+
+                doLoad: function() {
+                    console.log('doLoad');
+                    this.video = document.getElementById("video");
+                    this.c1 = document.getElementById("c1");
+                    // dimensions of the video tag (not the dimensions of the video itself, which is videoWidth)
+                    this.c1.width = this.video.offsetWidth;
+                    this.c1.height = this.video.offsetHeight;
+                    this.ctx1 = this.c1.getContext("2d");
+                    let self = this;
+                    this.video.addEventListener("play", function() {
+                        self.width = self.video.offsetWidth;
+                        self.height = self.video.offsetHeight;
+                        self.timerCallback();
+                    }, false);
+                },
+
+                computeFrame: function() {
+                    this.ctx1.drawImage(this.video, 0, 0, this.width, this.height);
+                    let frame = this.ctx1.getImageData(0, 0, this.width, this.height);
+
+                    work_image.set(frame.data.buffer);
+                    var image_infos = { ptr : work_image.byteOffset, sizeX : this.width, sizeY : this.height };
+                    blob_detector.process(image_infos);
+                    var thresh = blob_detector.get_thresh();
+
+                    var data = frame.data;
+
+                    for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
+                        var avg = thresh.get(j) ? 255 : 50;
+                        data[i]     = avg; // red
+                        data[i + 1] = avg; // green
+                        data[i + 2] = avg; // blue
+                        data[i + 3]=255;
+                    }
+                    this.ctx1.putImageData(frame, 0, 0);
+
+                    if(!lastCalledTime) {
+                        lastCalledTime = Date.now();
+                        return;
+                    }
+                    deltaArray.push((Date.now() - lastCalledTime)/1000);
+                    deltaArray.shift();
+                    lastCalledTime = Date.now();
+                    let delta = deltaArray.reduce(function(pv, cv) { return pv + cv; }, 0) / deltaArray.length;
+                    let fps = Math.round(1/delta*100)/100;
+
+                    this.ctx1.fillText('FPS : ' + fps,10,10);
+
+                    return;
+                    }
+                };
+
+                processor.doLoad();
+            }
+
+            //blob_detector.delete(); // TODO : when?
+            //Module._free(...);
+
+        </script>
+    </head>
+
+    <body>
+        <div>
+            <video id="video" src="ocr.ogv" controls="true" width="50%" height="50%"/>
+        </div>
+        <div>
+            <canvas id="c1"></canvas>
+        </div>
+    </body>
+</html>

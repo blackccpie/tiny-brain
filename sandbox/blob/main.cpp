@@ -29,7 +29,9 @@ using namespace emscripten;
 
 #include "tiny_brain/tinymage.h"
 
-#include "tiny_dnn/tiny_dnn.h"
+#include <sstream>
+#include <iostream>
+#include <set>
 
 /* blobs.detect()
  *
@@ -154,11 +156,6 @@ std::map<size_t,std::vector<size_t>> blob_detect( const tinymage<T> image )
    return bounds;
 }
 
-int main( int argc, char **argv )
-{
-    EM_ASM( allReady() );
-}
-
 class blob_detector
 {
 public:
@@ -221,9 +218,18 @@ private:
 };
 
 // Binding code
-EMSCRIPTEN_BINDINGS(mnist_ocr)
+EMSCRIPTEN_BINDINGS(blob)
 {
+    register_vector<size_t>("VectorSizeT");
+    register_vector<uint8_t>("VectorUInt8");
+
     class_<blob_detector>( "blob_detector" )
         .constructor<size_t,size_t>()
-        .function( "process", &blob_detector::process );
+        .function( "process", &blob_detector::process )
+        .function( "get_thresh", &blob_detector::get_thresh );
+}
+
+int main( int argc, char **argv )
+{
+    EM_ASM( allReady() );
 }
