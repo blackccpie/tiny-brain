@@ -252,14 +252,17 @@ int main( int argc, char **argv )
     EM_ASM( allReady() );
 }
 #else
+
+static const unsigned char green[] = { 0,255,0 };
+
 int main( int argc, char **argv )
 {
     tinymage<float> img;
     img.load( "../sandbox/ocr_ex.png" );
-    img.auto_threshold();
-    img.display();
+    auto thresh_img = img.get_auto_threshold();
+    thresh_img.display();
 
-    auto bounds = blob_detect( img );
+    auto bounds = blob_detect( thresh_img );
     std::vector<std::vector<size_t>> filtered_bounds;
 
     for ( const auto& _bounds : bounds )
@@ -277,6 +280,10 @@ int main( int argc, char **argv )
         filtered_bounds.emplace_back( std::vector<size_t>{ _bounds.second[0], _bounds.second[1], _bounds.second[2], _bounds.second[3], _bounds.second[4] } );
     }
 
+	// no smarter way to copy from grayscale to color image :-(
+    cimg_library::CImg<float> cimg_out( static_cast<int>( img.width() ), static_cast<int>( img.height() ), 1, 3 );
+    cimg_forXYC(cimg_out,x,y,c) { cimg_out(x,y,c) = thresh_img.c_at(x,y) > 0 ? 85.f : 0.f; }
+
     for ( const auto& _bounds : filtered_bounds )
     {
         std::stringstream ss;
@@ -285,7 +292,23 @@ int main( int argc, char **argv )
             ss << _coord << " ";
         }
         std::cout << "-> blob! " << " (" << ss.str() << ")" << std::endl;
+        cimg_out.draw_rectangle( _bounds[0], _bounds[1], _bounds[2], _bounds[3], green, .25f );
     }
+
+    cimg_out.display();
+
+	const auto& first_bound = filtered_bounds.front();
+	tinymage<float> cropped = img.get_crop( first_bound[0], first_bound[1], first_bound[2], first_bound[3] );
+
+	auto thresh_cropped = cropped.get_auto_threshold();
+
+	thresh_cropped.display();
+
+	auto line_sums = thresh_cropped.line_sums();
+	auto row_sums = thresh_cropped.row_sums();
+
+	line_sums.display();
+	row_sums.display();
 
     return 0;
 }
