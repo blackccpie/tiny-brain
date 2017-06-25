@@ -505,14 +505,14 @@ public:
         // invert 3x3 homography matrix
         float3x3 homog = inverse( float3x3{{a,d,g},{b,e,h},{c,f,1.f}} );
         a = homog[0][0], d = homog[0][1], g = homog[0][2], b = homog[1][0];
-        e = homog[1][2], h = homog[1][3], c = homog[2][0], f = homog[2][1];
+        e = homog[1][1], h = homog[1][2], c = homog[2][0], f = homog[2][1];
 
         auto homoX = [a,b,c,g,h]( const float& _x, const float& _y ) {
-                return ( a*_x + b*_y + c ) / ( g*_x + h*_y + 1 );
+                return ( a*_x + b*_y + c ) / ( g*_x + h*_y + 1.f );
         };
 
         auto homoY = [d,e,f,g,h]( const float& _x, const float& _y ) {
-                return ( d*_x + e*_y + f ) / ( g*_x + h*_y + 1 );
+                return ( d*_x + e*_y + f ) / ( g*_x + h*_y + 1.f );
         };
 
         tinymage_forXY(output,X,Y)
@@ -657,7 +657,7 @@ private:
         auto top_block = c_at( left, top ) + horizontal_progress * ( c_at( right, top) - c_at( left, top ) );
 
         // combine bottom_left and bottom_right into one large, horizontal block.
-        auto bottom_block = c_at( left, bottom) + horizontal_progress * ( c_at( right, bottom) - c_at( left, bottom) );
+        auto bottom_block = c_at( left, bottom ) + horizontal_progress * ( c_at( right, bottom ) - c_at( left, bottom ) );
 
         // combine the top_block and bottom_block using vertical interpolation and return as the resulting pixel.
         return static_cast<T>( top_block + vertical_progress * ( bottom_block - top_block ) );
