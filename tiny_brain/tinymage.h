@@ -523,12 +523,12 @@ public:
         a = homog[0][0], d = homog[0][1], g = homog[0][2], b = homog[1][0];
         e = homog[1][2], h = homog[1][3], c = homog[2][0], f = homog[2][1];
 
-        auto homoX = [a,b,c,g,h]( const float& x, const float& y ) {
-                return ( a*x + b*y + c ) / ( g*x + h*y + 1 );
+        auto homoX = [a,b,c,g,h]( const float& _x, const float& _y ) {
+                return ( a*_x + b*_y + c ) / ( g*_x + h*_y + 1 );
         };
 
-        auto homoY = [d,e,f,g,h]( const float& x, const float& y ) {
-                return ( d*x + e*y + f ) / ( g*x + h*y + 1 );
+        auto homoY = [d,e,f,g,h]( const float& _x, const float& _y ) {
+                return ( d*_x + e*_y + f ) / ( g*_x + h*_y + 1 );
         };
 
         tinymage_forXY(output,X,Y)
