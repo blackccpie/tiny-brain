@@ -436,8 +436,8 @@ public:
         tinymage<T> output( m_width, m_height, pad_val );
 
         // define the center of the image, which is the center of rotation.
-        auto vertical_center = static_cast<float>( m_width / 2 );
-        auto horizontal_center = static_cast<float>( m_height / 2 );
+        auto horizontal_center = static_cast<float>( m_width / 2 );
+		auto vertical_center = static_cast<float>( m_height / 2 );
 
         // loop through each pixel of the new image, select the new vertical
         // and horizontal positions, and interpolate the image to make the change.
@@ -445,12 +445,12 @@ public:
         {
             // figure out how rotated we want the image.
             auto _rad = angle * m_pi / 180.f;
-            auto vertical_position = std::cos( _rad ) *
-                ( x - vertical_center ) + std::sin( _rad ) * ( y - horizontal_center )
-                + vertical_center;
             auto horizontal_position = -std::sin(_rad) *
-                ( x - vertical_center ) + std::cos( _rad ) * ( y - horizontal_center )
+                ( y - vertical_center ) + std::cos( _rad ) * ( x - horizontal_center )
                 + horizontal_center;
+			auto vertical_position = std::cos(_rad) *
+				( y - vertical_center ) + std::sin( _rad ) * ( x - horizontal_center )
+				+ vertical_center;
 
             // figure out the four locations (and then, four pixels)
             // that we must interpolate from the original image.
@@ -463,8 +463,8 @@ public:
             // skip interpolating this pixel. Otherwise, interpolate the
             // pixel according to the dimensions set above and set the
             // resulting pixel.
-            if ( top >= 0 && bottom < static_cast<std::ptrdiff_t>( m_width ) &&
-				left >= 0 && right < static_cast<std::ptrdiff_t>( m_height ) )
+            if ( top >= 0 && bottom < static_cast<std::ptrdiff_t>( m_height ) &&
+				left >= 0 && right < static_cast<std::ptrdiff_t>( m_width ) )
             {
                 output.at( x, y ) = _bilinear_interpolation( top, bottom,
                     left, right, horizontal_position, vertical_position );
@@ -533,7 +533,7 @@ public:
 
         tinymage_forXY(output,X,Y)
         {
-            output.at( X, Y ) = _bilinear_interpolation( 0, m_height, 0, m_width,
+            output.at( X, Y ) = _bilinear_interpolation( 0, m_height-1, 0, m_width-1,
                                     homoX(X,Y), 
                                     homoY(X,Y) );
         }
@@ -651,10 +651,10 @@ private:
         auto vertical_progress = vertical_position - top;
 
         // combine top_left and top_right into one large, horizontal block.
-        auto top_block = c_at( top, left ) + horizontal_progress * ( c_at( top, right ) - c_at( top, left ) );
+        auto top_block = c_at( left, top ) + horizontal_progress * ( c_at( right, top) - c_at( left, top ) );
 
         // combine bottom_left and bottom_right into one large, horizontal block.
-        auto bottom_block = c_at( bottom, left ) + horizontal_progress * ( c_at( bottom, right ) - c_at( bottom, left ) );
+        auto bottom_block = c_at( left, bottom) + horizontal_progress * ( c_at( right, bottom) - c_at( left, bottom) );
 
         // combine the top_block and bottom_block using vertical interpolation and return as the resulting pixel.
         return static_cast<T>( top_block + vertical_progress * ( bottom_block - top_block ) );
