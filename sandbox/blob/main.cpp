@@ -302,14 +302,38 @@ int main( int argc, char **argv )
 
 	auto thresh_cropped = cropped.get_auto_threshold();
 
-	thresh_cropped.display();
-
 	auto line_sums = thresh_cropped.line_sums();
 	auto row_sums = thresh_cropped.row_sums();
 
-	line_sums.display();
-	row_sums.display();
+	//line_sums.display();
+	//row_sums.display();
 
-    return 0;
+	//size_t dh = 2;
+	size_t i0,i1,j0,j1;
+	for ( i0=1; i0<line_sums.height(); i0++ )
+		if ( line_sums[i0] == line_sums[i0-1] )
+			break;
+	for ( i1=line_sums.height()-2; i1>=0; i1-- )
+	 	if ( line_sums[i1] == line_sums[i1+1] )
+	 		break;
+	for ( j0=1; j0<row_sums.width(); j0++ )
+		if ( row_sums[j0] == row_sums[j0-1] )
+			break;
+	for ( j1=row_sums.width()-2; j1>=0; j1-- )
+		if ( row_sums[j1] == row_sums[j1+1] )
+			break;
+
+	std::cout << i0 << " " << i1 << " " << j0 << " " << j1 << std::endl;
+
+	thresh_cropped.display();
+
+	auto w = cropped.width();
+	auto h = cropped.height();
+
+	tinymage<float>::quad_coord_t incoord{ {i0,0U}, {w,j0}, {i1,h}, {0U,j1} };
+	tinymage<float>::quad_coord_t outcoord{ {0U,0U}, {w,0}, {w,h}, {0U,h} };
+	auto warped = cropped.get_warp( incoord, outcoord );
+
+	return 0;
 }
 #endif

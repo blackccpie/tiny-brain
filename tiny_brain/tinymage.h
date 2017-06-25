@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <cassert>
 #include <cmath>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #ifdef USE_CIMG
@@ -473,7 +474,7 @@ public:
         return output;
     }
 
-    using coord_t = std::pair<std::int16_t,std::int16_t>;
+    using coord_t = std::pair<size_t,size_t>;
     using quad_coord_t = std::tuple<coord_t,coord_t,coord_t,coord_t>;
     tinymage<T> get_warp(   const quad_coord_t& in_coords,
                             const quad_coord_t& out_coords )
@@ -489,26 +490,53 @@ public:
         using namespace linalg::aliases;
         tinymage<T> output( m_width, m_height );
 
+        float4 x( std::get<0>(in_coords).first, std::get<1>(in_coords).first, std::get<2>(in_coords).first, std::get<3>(in_coords).first );
+        float4 y( std::get<0>(in_coords).second, std::get<1>(in_coords).second, std::get<2>(in_coords).second, std::get<3>(in_coords).second );
+        float4 X( std::get<0>(out_coords).first, std::get<1>(out_coords).first, std::get<2>(out_coords).first, std::get<3>(out_coords).first );
+        float4 Y( std::get<0>(out_coords).second, std::get<1>(out_coords).second, std::get<2>(out_coords).second, std::get<3>(out_coords).second );
+
         // initialize transformation matrix (!!column major order!!)
         float4x4 hA, hB, hC, hD;
-        //hA = { { std::get<0>(in_coords).first, 2, 3, 4 }, { 1, 2, 3, 4 }, { 1.f, 1.f, 1.f, 1.f }, { 0.f, 0.f, 0.f, 0.f } };
-        hB = { { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 1, 2, 3, 4 }, { 1, 2, 3, 4 } };
-        hC = { { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 1, 2, 3, 4 } };
-        hD = { { 1, 2, 3, 4 }, { 1.f, 1.f, 1.f, 1.f }, { 1, 2, 3, 4 }, { 1, 2, 3, 4 } };
+        hA = { x, y, { 1.f, 1.f, 1.f, 1.f }, { 0.f, 0.f, 0.f, 0.f } };
+        hB = { { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, -x*X, -y*X };
+        hC = { { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, x };
+        hD = { y, { 1.f, 1.f, 1.f, 1.f }, -x*Y, -y*Y };
 
         // invert transformation matrix
         float4x4 ihA, ihB, ihC, ihD;
 
         // compute block inverse homography matrix
-        float4x4 invhD = inverse( hD );
+        auto invhD = inverse( hD );
         ihA = inverse( hA - mul( hB, mul( invhD, hC ) ) );
         ihB = mul( -ihA, mul( hB, invhD ) );
         ihC = mul( -invhD, mul( hC, ihA ) );
         ihD = invhD - mul( ihC, mul( hB, invhD ) );
 
         // compute transformation parameters vector
-        float a,b,c,d,e,f,g,h;
+        float4 abcd = mul( ihA, X ) + mul( ihB, X );
+        auto a = abcd[0], b = abcd[1], c = abcd[2], d = abcd[3];
+        float4 efgh = mul( ihC, Y ) + mul( ihD, Y );
+        auto e = efgh[0], f = efgh[1], g = efgh[2], h = efgh[3];
 
+        // invert 3x3 homography matrix
+        float3x3 homog = inverse( float3x3{{a,d,g},{b,e,h},{c,f,1.f}} );
+        a = homog[0][0], d = homog[0][1], g = homog[0][2], b = homog[1][0];
+        e = homog[1][2], h = homog[1][3], c = homog[2][0], f = homog[2][1];
+
+        auto homoX = [a,b,c,g,h]( const float& x, const float& y ) {
+                return ( a*x + b*y + c ) / ( g*x + h*y + 1 );
+        };
+
+        auto homoY = [d,e,f,g,h]( const float& x, const float& y ) {
+                return ( d*x + e*y + f ) / ( g*x + h*y + 1 );
+        };
+
+        tinymage_forXY(output,X,Y)
+        {
+            output.at( X, Y ) = _bilinear_interpolation( 0, m_height, 0, m_width,
+                                    homoX(X,Y), 
+                                    homoY(X,Y) );
+        }
 
         return output;
 	}
