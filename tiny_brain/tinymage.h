@@ -50,6 +50,8 @@ THE SOFTWARE.
 #define STB_IMAGE_RESIZE_INLINE
 #include "stb/stb_image_resize.h"
 
+#include "third_party/linalg.h"
+
 #define tinymage_for1(bound,i) for (std::size_t i = 0UL; i<bound; ++i)
 #define tinymage_forX(img,x) tinymage_for1( img.width(), x )
 #define tinymage_forY(img,y) tinymage_for1( img.height(), y )
@@ -463,6 +465,46 @@ public:
 
         return output;
     }
+
+    using coord_t = std::pair<std::int16_t,std::int16_t>;
+    using quad_coord_t = std::tuple<coord_t,coord_t,coord_t,coord_t>;
+    tinymage<T> get_warp(   const quad_coord_t& in_coords,
+                            const quad_coord_t& out_coords )
+	{
+        // NOTE1:
+        // The homography equations computation is based on :
+        // http://www.corrmap.com/features/homography_transformation.php
+        // NOTE2:
+        // 8x8 Matrix inversion is performed using 4x4 block matrix inversion,
+        // as linalg does not support sizes > 4
+        // https://en.wikipedia.org/wiki/Block_matrix#Block_matrix_inversion
+
+        using namespace linalg::aliases;
+        tinymage<T> output( m_width, m_height );
+
+        // initialize transformation matrix (!!column major order!!)
+        float4x4 hA, hB, hC, hD;
+        //hA = { { std::get<0>(in_coords).first, 2, 3, 4 }, { 1, 2, 3, 4 }, { 1.f, 1.f, 1.f, 1.f }, { 0.f, 0.f, 0.f, 0.f } };
+        hB = { { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 1, 2, 3, 4 }, { 1, 2, 3, 4 } };
+        hC = { { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f, 0.f }, { 1, 2, 3, 4 } };
+        hD = { { 1, 2, 3, 4 }, { 1.f, 1.f, 1.f, 1.f }, { 1, 2, 3, 4 }, { 1, 2, 3, 4 } };
+
+        // invert transformation matrix
+        float4x4 ihA, ihB, ihC, ihD;
+
+        // compute block inverse homography matrix
+        float4x4 invhD = inverse( hD );
+        ihA = inverse( hA - mul( hB, mul( invhD, hC ) ) );
+        ihB = mul( -ihA, mul( hB, invhD ) );
+        ihC = mul( -invhD, mul( hC, ihA ) );
+        ihD = invhD - mul( ihC, mul( hB, invhD ) );
+
+        // compute transformation parameters vector
+        float a,b,c,d,e,f,g,h;
+
+
+        return output;
+	}
 
     void display() const
     {
