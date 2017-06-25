@@ -452,23 +452,7 @@ public:
 				( y - vertical_center ) + std::sin( _rad ) * ( x - horizontal_center )
 				+ vertical_center;
 
-            // figure out the four locations (and then, four pixels)
-            // that we must interpolate from the original image.
-            auto top = static_cast<std::ptrdiff_t>( std::floor( vertical_position ) );
-            auto bottom = top + 1;
-            auto left = static_cast<std::ptrdiff_t>( std::floor( horizontal_position ) );
-            auto right = left + 1;
-
-            // check if any of the four locations are invalid. If they are,
-            // skip interpolating this pixel. Otherwise, interpolate the
-            // pixel according to the dimensions set above and set the
-            // resulting pixel.
-            if ( top >= 0 && bottom < static_cast<std::ptrdiff_t>( m_height ) &&
-				left >= 0 && right < static_cast<std::ptrdiff_t>( m_width ) )
-            {
-                output.at( x, y ) = _bilinear_interpolation( top, bottom,
-                    left, right, horizontal_position, vertical_position );
-            }
+            _bilinear_interpolation( output.at( x, y ), horizontal_position, vertical_position );
         }
 
         return output;
@@ -533,9 +517,7 @@ public:
 
         tinymage_forXY(output,X,Y)
         {
-            output.at( X, Y ) = _bilinear_interpolation( 0, m_height-1, 0, m_width-1,
-                                    homoX(X,Y), 
-                                    homoY(X,Y) );
+            _bilinear_interpolation( output.at( X, Y ), homoX( X, Y ), homoY( X, Y ) );
         }
 
         return output;
@@ -641,6 +623,27 @@ private:
         } while ( ( movingIndex + 1 ) <= result && movingIndex < max - 1 );
 
         return static_cast<int>( std::round( result ) );
+    }
+
+    void _bilinear_interpolation( T& out, float horizontal_position, float vertical_position )
+    {
+        // figure out the four locations (and then, four pixels)
+        // that we must interpolate from the original image.
+        auto top = static_cast<std::ptrdiff_t>( std::floor( vertical_position ) );
+        auto bottom = top + 1;
+        auto left = static_cast<std::ptrdiff_t>( std::floor( horizontal_position ) );
+        auto right = left + 1;
+
+        // check if any of the four locations are invalid. If they are,
+        // skip interpolating this pixel. Otherwise, interpolate the
+        // pixel according to the dimensions set above and set the
+        // resulting pixel.
+        if ( top >= 0 && bottom < static_cast<std::ptrdiff_t>( m_height ) &&
+            left >= 0 && right < static_cast<std::ptrdiff_t>( m_width ) )
+        {
+            out = _bilinear_interpolation( top, bottom,
+                left, right, horizontal_position, vertical_position );
+        }
     }
 
     T _bilinear_interpolation(  std::ptrdiff_t top, std::ptrdiff_t bottom, std::ptrdiff_t left, std::ptrdiff_t right,
