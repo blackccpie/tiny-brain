@@ -353,6 +353,13 @@ public:
         return hist;
     }
 
+    tinymage<T> get_auto_threshold()
+    {
+        tinymage<T> output( *this );
+        output.auto_threshold();
+        return output;
+    }
+
     void auto_threshold()
     {
         // One of the many autothreshold IJ implementations:
