@@ -19,3 +19,9 @@ tiny-brain includes tiny-dnn as a _git submodule_, therefore use the following c
 ```
 git clone --recursive https://github.com/blackccpie/tiny-brain.git
 ```
+
+****Demo****
+
+A full-webassemby mnist digit recognition demo can be viewed online here:
+
+http://blackccpie.free.fr/ocr/
