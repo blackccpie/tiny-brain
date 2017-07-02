@@ -497,9 +497,9 @@ public:
         ihD = invhD - mul( ihC, mul( hB, invhD ) );
 
         // compute transformation parameters vector
-        float4 abcd = mul( ihA, X ) + mul( ihB, X );
+        float4 abcd = mul( ihA, X ) + mul( ihB, Y );
         auto a = abcd[0], b = abcd[1], c = abcd[2], d = abcd[3];
-        float4 efgh = mul( ihC, Y ) + mul( ihD, Y );
+        float4 efgh = mul( ihC, X ) + mul( ihD, Y );
         auto e = efgh[0], f = efgh[1], g = efgh[2], h = efgh[3];
 
         // invert 3x3 homography matrix
