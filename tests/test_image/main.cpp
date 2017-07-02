@@ -32,15 +32,14 @@ int main( int argc, char **argv )
     img.load( "../data/ocr/images/123456.png" );
     img.display();
 
-    /*auto w = img.width(); auto h = img.height();
-    tinymage<float>::quad_coord_t incoord{ {0,0U}, {w,0U}, {w,h}, {0U,h} };// TODO : ugly float!
-	tinymage<float>::quad_coord_t outcoord{ {0U,0U}, {w,0U}, {w,h}, {0U,h} };
-    auto warped = img.get_warp( incoord, outcoord );
-    warped.display();
-    return 0;*/
-
     tinymage<float> rotated = img.get_rotate( 30.f );
     rotated.display();
+
+	auto w = img.width() - 1; auto h = img.height() - 1;
+	tinymage<float>::quad_coord_t incoord{ { 0U,0U },{ w,0U },{ w,h },{ 0U,h } };// TODO : ugly float!
+	tinymage<float>::quad_coord_t outcoord{ { 10U,0U },{ w,10U },{ w - 10U,h },{ 0U,h - 10U } };
+	auto warped = img.get_warp(incoord, outcoord);
+	warped.display();
 
     tinymage<unsigned char> work = img.convert<unsigned char>().get_sobel();
     work.display();
