@@ -58,6 +58,11 @@ THE SOFTWARE.
 #define tinymage_forY(img,y) tinymage_for1( img.height(), y )
 #define tinymage_forXY(img,x,y) tinymage_forY(img,y) tinymage_forX(img,x)
 
+namespace tinymage_types {
+    using coord_t = std::pair<size_t,size_t>;
+    using quad_coord_t = std::tuple<coord_t,coord_t,coord_t,coord_t>;
+}
+
 template<typename T=float>
 class tinymage final : private std::vector<T>
 {
@@ -458,10 +463,8 @@ public:
         return output;
     }
 
-    using coord_t = std::pair<size_t,size_t>;
-    using quad_coord_t = std::tuple<coord_t,coord_t,coord_t,coord_t>;
-    tinymage<T> get_warp(   const quad_coord_t& in_coords,
-                            const quad_coord_t& out_coords )
+    tinymage<T> get_warp(   const tinymage_types::quad_coord_t& in_coords,
+                            const tinymage_types::quad_coord_t& out_coords )
 	{
         // NOTE1:
         // The homography equations computation is based on :

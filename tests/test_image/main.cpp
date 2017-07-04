@@ -36,8 +36,8 @@ int main( int argc, char **argv )
     rotated.display();
 
 	auto w = img.width() - 1; auto h = img.height() - 1;
-	tinymage<float>::quad_coord_t incoord{ { 0U,0U },{ w,0U },{ w,h },{ 0U,h } };// TODO : ugly float!
-	tinymage<float>::quad_coord_t outcoord{ { 10U,0U },{ w,10U },{ w - 10U,h },{ 0U,h - 10U } };
+	tinymage_types::quad_coord_t incoord{ { 0U,0U },{ w,0U },{ w,h },{ 0U,h } };
+	tinymage_types::quad_coord_t outcoord{ { 10U,0U },{ w,10U },{ w - 10U,h },{ 0U,h - 10U } };
 	auto warped = img.get_warp(incoord, outcoord);
 	warped.display();
 
