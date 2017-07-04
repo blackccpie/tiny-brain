@@ -213,6 +213,11 @@ public:
         *this = get_crop( startx, starty, stopx, stopy );
     }
 
+    void remove_border( std::size_t px_size )
+    {
+        crop( px_size, px_size, m_width - px_size, m_height - px_size );
+    }
+
     tinymage<T> get_columns(    std::size_t startx,
                                 std::size_t stopx ) const
     {

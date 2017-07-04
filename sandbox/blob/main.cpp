@@ -29,7 +29,7 @@ THE SOFTWARE.
 	using namespace emscripten;
 #endif
 
-#include "tiny_brain/tinymage.h"
+#include "tiny_brain/tinydigit.h"
 
 #include <sstream>
 #include <iostream>
@@ -330,12 +330,20 @@ int main( int argc, char **argv )
 	auto w = cropped.width()-1;
 	auto h = cropped.height()-1;
 
-	//tinymage<float>::quad_coord_t incoord{ { 21,0 },{ 531,19 },{ 523,256 },{ 0,235 } };
+	//tinymage_types::quad_coord_t incoord{ { 21,0 },{ 531,19 },{ 523,256 },{ 0,235 } };
 	tinymage_types::quad_coord_t incoord{ {i0,0U}, {w,j0}, {i1,h}, {0U,j1} };
 	tinymage_types::quad_coord_t outcoord{ {0U,0U}, {w,0U}, {w,h}, {0U,h} };
 	auto warped = cropped.get_warp( incoord, outcoord );
-
+	warped.remove_border( 2 );
 	warped.display();
+
+	tinydigit digit_ocr;
+	digit_ocr.process( warped );
+
+    auto& cropped_numbers = digit_ocr.cropped_numbers();
+    cropped_numbers.display();
+
+    std::cout << "INFERRED DIGITS ARE : " << digit_ocr.reco_string() << std::endl;
 
 	return 0;
 }
