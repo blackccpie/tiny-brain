@@ -45,7 +45,6 @@ else ()
 endif ()
 
 set (sources_list
-ocr.cpp
 ${extra_sources}
 )
 

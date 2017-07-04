@@ -22,11 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "ocr.h"
-
-#include "tiny_brain/tinymage.h"
-
-#include <iostream>
+#include "tiny_brain/tinydigit.h"
 
 int main( int argc, char **argv )
 {
@@ -34,13 +30,13 @@ int main( int argc, char **argv )
     img.load( "../../data/ocr/images/123456.png" );
     img.display();
 
-    ocr_helper ocr_h;
-    ocr_h.process( img );
+    tinydigit digit_ocr;
+    digit_ocr.process( img );
 
-    //auto& cropped_numbers = ocr_h.cropped_numbers();
-    //cropped_numbers.display();
+    auto& cropped_numbers = digit_ocr.cropped_numbers();
+    cropped_numbers.display();
 
-    std::cout << "INFERRED DIGITS ARE : " << ocr_h.reco_string() << std::endl;
+    std::cout << "INFERRED DIGITS ARE : " << digit_ocr.reco_string() << std::endl;
 
     return 0;
 }

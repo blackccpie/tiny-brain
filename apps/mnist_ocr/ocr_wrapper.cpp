@@ -23,9 +23,8 @@ THE SOFTWARE.
 */
 
 #include "ocr_wrapper.h"
-#include "ocr.h"
 
-#include "tiny_brain/tinymage.h"
+#include "tiny_brain/tinydigit.h"
 
 #include <emscripten/bind.h>
 using namespace emscripten;
@@ -36,18 +35,18 @@ public:
     ocr_wrapper_impl() {}
     void process( const tinymage<float>& img )
     {
-        m_ocr.process( img );
+        m_digit_ocr.process( img );
     }
     const tinymage<float>& cropped_numbers()
     {
-        return m_ocr.cropped_numbers();
+        return m_digit_ocr.cropped_numbers();
     }
     std::string reco_string()
     {
-        return m_ocr.reco_string();
+        return m_digit_ocr.reco_string();
     }
 private:
-    ocr_helper m_ocr;
+    tinydigit m_digit_ocr;
 };
 
 ocr_wrapper::ocr_wrapper()

@@ -22,20 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "ocr.h"
+#pragma once
 
 #include "tiny_brain/tinymage.h"
 
+#include "tiny_dnn/tiny_dnn.h"
+
 #include <iostream>
 
-using t_digit_interval = std::pair<size_t,size_t>;
-
-using namespace tiny_dnn;
-
-class ocr_helper::ocr_helper_impl
+class tinydigit
 {
 public:
-    ocr_helper_impl()
+
+    struct reco
+    {
+        size_t position;
+        size_t value;
+        float confidence;
+    };
+
+public:
+    tinydigit()
     {
 #ifdef __EMSCRIPTEN__
         m_net_manager.load( "./ocr/models/kaggle-mnist-model" );
@@ -54,20 +61,20 @@ public:
         std::vector<t_digit_interval> number_intervals;
         _compute_ranges( m_cropped_numbers, number_intervals );
 
-        std::cout << "ocr_helper::process - started inferring numbers on detected intervals" << std::endl;
+        std::cout << "tinydigit::process - started inferring numbers on detected intervals" << std::endl;
 
         for ( auto& ni : number_intervals )
         {
             if ( ( ni.second - ni.first ) < 10 ) // letter is thinner than 10px, too small!!
             {
-                std::cout << "ocr_helper::process - digit is too thin, skipping..." << std::endl;
+                std::cout << "tinydigit::process - digit is too thin, skipping..." << std::endl;
                 continue;
             }
 
-            std::cout << "ocr_helper::process - cropping at " << ni.first << " " << ni.second << std::endl;
+            std::cout << "tinydigit::process - cropping at " << ni.first << " " << ni.second << std::endl;
             auto cropped_number = m_cropped_numbers.get_columns( ni.first, ni.second );
 
-            std::cout << "ocr_helper::process - centering number" << std::endl;
+            std::cout << "tinydigit::process - centering number" << std::endl;
             _center_number( cropped_number );
 
             // convert imagefile to vec_t
@@ -81,14 +88,14 @@ public:
             auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
             auto max_score_val = *max_score;
 
-            std::cout << "ocr_helper::process - max comp idx: " << max_index << " max comp val: " << max_score_val << std::endl;
+            std::cout << "tinydigit::process - max comp idx: " << max_index << " max comp val: " << max_score_val << std::endl;
 
             m_recognitions.emplace_back( reco{ ni.first, max_index, 100.f * max_score_val } );
 
         	//cropped_number.display();
         }
 
-        std::cout << "ocr_helper::process - ended inferring numbers on detected intervals" << std::endl;
+        std::cout << "tinydigit::process - ended inferring numbers on detected intervals" << std::endl;
     }
 
     const tinymage<float>& cropped_numbers()
@@ -98,7 +105,7 @@ public:
 
 public:
 
-    const std::vector<ocr_helper::reco>& recognitions() { return m_recognitions; }
+    const std::vector<reco>& recognitions() { return m_recognitions; }
 
     std::string reco_string()
     {
@@ -110,12 +117,12 @@ public:
 
 private:
 
-    vec_t _compute_augmented_output( tinymage<float>& img )
+    tiny_dnn::vec_t _compute_augmented_output( tinymage<float>& img )
     {
         // ONLY ROTATION AUGMENTATION IS IMPLEMENTED YET
         std::array<float,11> rotations{ { -5.f, -4.f, -3.f, -2.f, -1.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f } };
 
-        std::vector<vec_t> vec_res;
+        std::vector<tiny_dnn::vec_t> vec_res;
 
         for ( const auto& rot : rotations )
         {
@@ -123,7 +130,7 @@ private:
             auto rotated = img.get_rotate( rot, -1.f );
             //rotated.display();
             vec_res.emplace_back(
-                m_net_manager.predict( vec_t( rotated.data(), rotated.data() + rotated.size() ) )
+                m_net_manager.predict( tiny_dnn::vec_t( rotated.data(), rotated.data() + rotated.size() ) )
             );
         }
 
@@ -152,17 +159,17 @@ private:
         // returns [0...255] clamped image
         auto work_edge = work.get_sobel();
 
-        work_edge.normalize( 0, 255 );
+        work_edge.normalize( 0, 255 ); // utile, rapport avec thresh à 40?
         //work_edge.display();
 
-        std::cout << "ocr_helper::get_cropped_numbers - image mean value is " << static_cast<int>( work_edge.mean() ) << std::endl;
+        std::cout << "tinydigit::get_cropped_numbers - image mean value is " << static_cast<int>( work_edge.mean() ) << std::endl;
         // TODO " , noise variance is " << work_edge.variance_noise() << std::endl;
 
         // TODO
         // if ( work_edge.variance_noise() > 10.f )
         // {
         // 	work_edge.erode( 3 );
-        // 	std::cout << "ocr_helper::get_cropped_numbers - post erosion mean value is " << work_edge.mean() << " , post erosion noise variance is " << work_edge.variance_noise() << std::endl;
+        // 	std::cout << "tinydigit::get_cropped_numbers - post erosion mean value is " << work_edge.mean() << " , post erosion noise variance is " << work_edge.variance_noise() << std::endl;
         // }
 
         work_edge.threshold( 40 );
@@ -226,11 +233,12 @@ private:
         stopX += std::min( input.width() - stopX - 1, 2 * margin );
         stopY += std::min( input.height() - stopY - 1, margin );
 
-        std::cout << "ocr_helper::get_cropped_numbers - " << margin << " / " << startX << " " << startY << " " << stopX << " " << stopY << std::endl;
+        std::cout << "tinydigit::get_cropped_numbers - " << margin << " / " << startX << " " << startY << " " << stopX << " " << stopY << std::endl;
 
         return 1.f - input.get_crop( startX, startY, stopX, stopY );
     }
 
+    using t_digit_interval = std::pair<size_t,size_t>;
     void _compute_ranges( const tinymage<float>& input, std::vector<t_digit_interval>& number_intervals )
     {
         // Compute row sums image
@@ -364,37 +372,7 @@ private:
 
 private:
 
-    std::vector<ocr_helper::reco> m_recognitions;
+    std::vector<reco> m_recognitions;
     tinymage<float> m_cropped_numbers;
-    network<sequential> m_net_manager;
+    tiny_dnn::network<tiny_dnn::sequential> m_net_manager;
 };
-
-ocr_helper::ocr_helper()
-    : m_pimpl( std::make_unique<ocr_helper_impl>() )
-{
-}
-
-ocr_helper::~ocr_helper()
-{
-    // https://stackoverflow.com/questions/9954518/stdunique-ptr-with-an-incomplete-type-wont-compile
-}
-
-void ocr_helper::process( const tinymage<float>& img )
-{
-    m_pimpl->process( img );
-}
-
-const tinymage<float>& ocr_helper::cropped_numbers()
-{
-    return m_pimpl->cropped_numbers();
-}
-
-const std::vector<ocr_helper::reco>& ocr_helper::recognitions()
-{
-    return m_pimpl->recognitions();
-}
-
-std::string ocr_helper::reco_string()
-{
-    return m_pimpl->reco_string();
-}
