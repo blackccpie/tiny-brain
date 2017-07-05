@@ -134,6 +134,12 @@ public:
         return at( x + m_width*y );
     }
 
+    template<typename T2>
+    T2 at( std::size_t x, std::size_t y ) const
+    {
+        return static_cast<T2>( at( x + m_width*y ) );
+    }
+
     const T& c_at( std::size_t x, std::size_t y ) const
     {
         return at( x + m_width*y );
@@ -228,6 +234,32 @@ public:
                             std::size_t stopy ) const
     {
         return get_crop( 0, starty, m_width, stopy );
+    }
+
+    tinymage<float> get_dline()
+    {
+        tinymage<T> output( m_width, m_height );
+
+        for ( std::size_t j = 0UL; j<m_height; ++j )
+            for ( std::size_t i = 1UL; i<m_width-1; ++i )
+            {
+                output.at( i, j ) = ( at<float>( i+1, j ) - at<float>( i-1, j ) ) / 2.f;
+            }
+
+        return output;
+    }
+
+    tinymage<float> get_dcolumn()
+    {
+        tinymage<T> output( m_width, m_height );
+
+        for ( std::size_t j = 1UL; j<m_height-1; ++j )
+            for ( std::size_t i = 0UL; i<m_width; ++i )
+            {
+                output.at( i, j ) = ( at<float>( i, j+1 ) - at<float>( i, j-1 ) ) / 2.f;
+            }
+
+        return output;
     }
 
     void canvas_resize( std::size_t nsx, std::size_t nsy, float centering_x = 0.5f, float centering_y = 0.5f )

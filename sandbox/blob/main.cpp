@@ -308,19 +308,24 @@ int main( int argc, char **argv )
 	//line_sums.display();
 	//row_sums.display();
 
-	//size_t dh = 2;
+	auto dline_sums = line_sums.get_dcolumn();
+	auto drow_dums = row_sums.get_dline();
+
+	//dline_sums.display();
+	//drow_dums.display();
+
 	size_t i0,i1,j0,j1;
-	for ( i0=1; i0<line_sums.height(); i0++ )
-		if ( line_sums[i0] == line_sums[i0-1] )
+	for ( i0=1; i0<drow_dums.width(); i0++ )
+		if ( drow_dums[i0] == 0 )
 			break;
-	for ( i1=line_sums.height()-2; i1>=0; i1-- )
-	 	if ( line_sums[i1] == line_sums[i1+1] )
-	 		break;
-	for ( j0=1; j0<row_sums.width(); j0++ )
-		if ( row_sums[j0] == row_sums[j0-1] )
+	for ( i1=drow_dums.width()-2; i1>=0; i1-- )
+		if ( drow_dums[i1] == 0 )
 			break;
-	for ( j1=row_sums.width()-2; j1>=0; j1-- )
-		if ( row_sums[j1] == row_sums[j1+1] )
+	for ( j0=1; j0<dline_sums.height(); j0++ )
+		if ( dline_sums[j0] == 0 )
+			break;
+	for ( j1=dline_sums.height()-2; j1>=0; j1-- )
+		if ( dline_sums[j1] == 0 )
 			break;
 
 	std::cout << i0 << " " << i1 << " " << j0 << " " << j1 << std::endl;
