@@ -36,7 +36,7 @@ class tinysign
 public:
     tinysign( size_t sx, size_t sy ) : m_input( sx, sy ) {}
 
-    void process( tinymage<float>& img_in )
+    void locate( const tinymage<float>& img_in )
     {
 		m_input = img_in.get_auto_threshold();
         m_input.display();
@@ -75,13 +75,64 @@ public:
     }
     const tinymage<float>& get_sign_thresh()
     {
-        return m_input;
+        return m_input; // TODO:  really usefull to keep thresholded image?
     }
 
+    void extract( const tinymage<float>& img_in, const std::vector<size_t>& sign_bounds )
+    {
+        tinymage<float> cropped = img_in.get_crop( sign_bounds[0], sign_bounds[1], sign_bounds[2], sign_bounds[3] );
+
+    	auto thresh_cropped = cropped.get_auto_threshold();
+
+    	auto line_sums = thresh_cropped.line_sums();
+    	auto row_sums = thresh_cropped.row_sums();
+
+    	//line_sums.display();
+    	//row_sums.display();
+
+    	auto dline_sums = line_sums.get_dcolumn();
+    	auto drow_dums = row_sums.get_dline();
+
+    	//dline_sums.display();
+    	//drow_dums.display();
+
+    	int i0,i1,j0,j1;
+    	for ( i0=1; i0<drow_dums.width(); i0++ )
+    		if ( drow_dums[i0] == 0 )
+    			break;
+    	for ( i1=drow_dums.width()-2; i1>=0; i1-- )
+    		if ( drow_dums[i1] == 0 )
+    			break;
+    	for ( j0=1; j0<dline_sums.height(); j0++ )
+    		if ( dline_sums[j0] == 0 )
+    			break;
+    	for ( j1=dline_sums.height()-2; j1>=0; j1-- )
+    		if ( dline_sums[j1] == 0 )
+    			break;
+
+    	//std::cout << i0 << " " << i1 << " " << j0 << " " << j1 << std::endl;
+
+    	thresh_cropped.display();
+
+    	auto w = cropped.width()-1;
+    	auto h = cropped.height()-1;
+
+    	//tinymage_types::quad_coord_t incoord{ { 21,0 },{ 531,19 },{ 523,256 },{ 0,235 } };
+    	tinymage_types::quad_coord_t incoord{ {i0,0U}, {w,j0}, {i1,h}, {0U,j1} };
+    	tinymage_types::quad_coord_t outcoord{ {0U,0U}, {w,0U}, {w,h}, {0U,h} };
+    	m_warped = cropped.get_warp( incoord, outcoord );
+    	m_warped.remove_border( 2 );
+    	m_warped.display();
+    }
+    const tinymage<float>& get_sign_warp()
+    {
+        return m_warped;
+    }
 
 private:
 
     tinymage<float> m_input;
+    tinymage<float> m_warped;
 
     using bounds_t = std::map<size_t,std::vector<size_t>>;
     bounds_t m_bounds;

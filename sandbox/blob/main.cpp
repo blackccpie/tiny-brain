@@ -41,7 +41,7 @@ class digits_sign_detector
 public:
     digits_sign_detector( size_t sx, size_t sy ) : m_img( sx, sy ), m_sign_helper( sx, sy )
         { std::cout << "digits_sign_detector::digits_sign_detector - " << sx << "x" << sy << std::endl; }
-    void process( emscripten::val image )
+    void locate( emscripten::val image )
     {
         auto ptr = reinterpret_cast<uint8_t*>( image["ptr"].as<int>() );
         auto sx = image["sizeX"].as<int>();
@@ -56,14 +56,14 @@ public:
             i+=4;
         });
 
-		m_sign_helper.process( m_img );
+		m_sign_helper.locate( m_img );
     }
     std::vector<size_t> get_sign_bounds()
     {
-		const auto& _bounds = m_sign_helper.get_sign_bounds();
-        auto w = _bounds[2]-_bounds[0];
-        auto h = _bounds[3]-_bounds[1];
-        return { _bounds[0], _bounds[1], w, h };
+		m_sign_bounds = m_sign_helper.get_sign_bounds();
+        auto w = m_sign_bounds[2]-m_sign_bounds[0];
+        auto h = m_sign_bounds[3]-m_sign_bounds[1];
+        return { m_sign_bounds[0], m_sign_bounds[1], w, h };
     }
     std::vector<uint8_t> get_sign_thresh()
     {
@@ -71,7 +71,19 @@ public:
         return { thresh_sign.data(), thresh_sign.data() + thresh_sign.size() };
     }
 
+	void extract()
+    {
+		m_sign_helper.extract( m_img, m_sign_bounds );
+	}
+	std::vector<uint8_t> get_sign_warp()
+    {
+		auto warp_sign = m_sign_helper.get_sign_warp().convert<uint8_t>();
+        return { warp_sign.data(), warp_sign.data() + warp_sign.size() };
+	}
+
 private:
+
+	std::vector<size_t> m_sign_bounds;
 
 	tinymage<float> m_img;
 
@@ -86,9 +98,11 @@ EMSCRIPTEN_BINDINGS(digits_sign_detector)
 
     class_<digits_sign_detector>( "digits_sign_detector" )
         .constructor<size_t,size_t>()
-        .function( "process", &digits_sign_detector::process )
+        .function( "locate", &digits_sign_detector::locate )
         .function( "get_sign_thresh", &digits_sign_detector::get_sign_thresh )
-        .function( "get_sign_bounds", &digits_sign_detector::get_sign_bounds );
+        .function( "get_sign_bounds", &digits_sign_detector::get_sign_bounds )
+		.function( "extract", &digits_sign_detector::extract )
+		.function( "get_sign_warp", &digits_sign_detector::get_sign_warp );
 }
 
 int main( int argc, char **argv )
@@ -105,7 +119,7 @@ int main( int argc, char **argv )
     img.load( "../sandbox/ocr_ex.png" );
 
 	tinysign m_sign_helper( img.width(), img.height() );
-	m_sign_helper.process( img );
+	m_sign_helper.locate( img );
 
 	auto sign_thresh = m_sign_helper.get_sign_thresh();
 	auto sign_bounds = m_sign_helper.get_sign_bounds();
@@ -116,49 +130,9 @@ int main( int argc, char **argv )
 	cimg_out.draw_rectangle( sign_bounds[0], sign_bounds[1], sign_bounds[2], sign_bounds[3], green, .25f );
     cimg_out.display();
 
-	tinymage<float> cropped = img.get_crop( sign_bounds[0], sign_bounds[1], sign_bounds[2], sign_bounds[3] );
+	m_sign_helper.extract( img, sign_bounds );
 
-	auto thresh_cropped = cropped.get_auto_threshold();
-
-	auto line_sums = thresh_cropped.line_sums();
-	auto row_sums = thresh_cropped.row_sums();
-
-	//line_sums.display();
-	//row_sums.display();
-
-	auto dline_sums = line_sums.get_dcolumn();
-	auto drow_dums = row_sums.get_dline();
-
-	//dline_sums.display();
-	//drow_dums.display();
-
-	size_t i0,i1,j0,j1;
-	for ( i0=1; i0<drow_dums.width(); i0++ )
-		if ( drow_dums[i0] == 0 )
-			break;
-	for ( i1=drow_dums.width()-2; i1>=0; i1-- )
-		if ( drow_dums[i1] == 0 )
-			break;
-	for ( j0=1; j0<dline_sums.height(); j0++ )
-		if ( dline_sums[j0] == 0 )
-			break;
-	for ( j1=dline_sums.height()-2; j1>=0; j1-- )
-		if ( dline_sums[j1] == 0 )
-			break;
-
-	std::cout << i0 << " " << i1 << " " << j0 << " " << j1 << std::endl;
-
-	thresh_cropped.display();
-
-	auto w = cropped.width()-1;
-	auto h = cropped.height()-1;
-
-	//tinymage_types::quad_coord_t incoord{ { 21,0 },{ 531,19 },{ 523,256 },{ 0,235 } };
-	tinymage_types::quad_coord_t incoord{ {i0,0U}, {w,j0}, {i1,h}, {0U,j1} };
-	tinymage_types::quad_coord_t outcoord{ {0U,0U}, {w,0U}, {w,h}, {0U,h} };
-	auto warped = cropped.get_warp( incoord, outcoord );
-	warped.remove_border( 2 );
-	warped.display();
+	const auto& warped = m_sign_helper.get_sign_warp();
 
 	tinydigit digit_ocr;
 	digit_ocr.process( warped );

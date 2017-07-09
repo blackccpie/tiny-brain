@@ -9,10 +9,10 @@
           }
           div {
             float: left;
-            /*border :1px solid #444444;
+            border: 1px solid #444444;
             padding:5px;
             margin: 5px;
-            background:#3B3B3B;*/
+            /*background:#3B3B3B;*/
           }
         </style>
         <script type="text/javascript" src="blob.js"></script>
@@ -49,12 +49,14 @@
 
                     doLoad: function() {
                         this.video = document.getElementById("video");
-                        this.video.playbackRate = 0.5;
+                        this.video.playbackRate = 0.1;
                         this.c1 = document.getElementById("c1");
+                        this.c2 = document.getElementById("c2");
                         // dimensions of the video tag (not the dimensions of the video itself, which is videoWidth)
                         this.c1.width = this.video.offsetWidth;
                         this.c1.height = this.video.offsetHeight;
                         this.ctx1 = this.c1.getContext("2d");
+                        this.ctx2 = this.c2.getContext("2d");
                         let self = this;
                         this.video.addEventListener("play", function() {
                             self.width = self.video.offsetWidth;
@@ -65,41 +67,65 @@
 
                     computeFrame: function() {
                         this.ctx1.drawImage(this.video, 0, 0, this.width, this.height);
-                        let frame = this.ctx1.getImageData(0, 0, this.width, this.height);
+                        let frame1 = this.ctx1.getImageData(0, 0, this.width, this.height);
+                        let frame_data1 = frame1.data;
 
-                        if ( frame.data.length == 0 )
+                        if ( frame1.data.length == 0 )
                             return;
 
                         // TODO : why can't work_image be allocated once and for all??
-                        var numBytes = this.width * this.height * 4;
-                        var ptr = Module._malloc(numBytes);
+                        let numBytes = this.width * this.height * 4;
+                        let ptr = Module._malloc(numBytes);
                         work_image = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
 
-                        work_image.set(new Uint8Array(frame.data.buffer));
-                        var image_infos = { ptr : work_image.byteOffset, sizeX : this.width, sizeY : this.height };
-                        digits_sign_detector.process(image_infos);
-                        var thresh = digits_sign_detector.get_sign_thresh();
+                        /********************** LOCATE *********************/
 
-                        var data = frame.data;
+                        work_image.set(new Uint8Array(frame_data1.buffer));
+                        let image_infos = { ptr : work_image.byteOffset, sizeX : this.width, sizeY : this.height };
+                        digits_sign_detector.locate(image_infos);
+                        let thresh = digits_sign_detector.get_sign_thresh();
 
-                        for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
-                            var avg = thresh.get(j) ? 255 : 50;
-                            data[i]     = avg; // red
-                            data[i + 1] = avg; // green
-                            data[i + 2] = avg; // blue
-                            data[i + 3]=255;
+                        for ( i = 0, j = 0; i < frame_data1.length; i += 4, j+= 1) {
+                            let avg = thresh.get(j) ? 255 : 50;
+                            frame_data1[i]     = avg; // red
+                            frame_data1[i + 1] = avg; // green
+                            frame_data1[i + 2] = avg; // blue
+                            frame_data1[i + 3]=255;
                         }
-                        this.ctx1.putImageData(frame, 0, 0);
-
-                        Module._free(work_image.byteOffset);
+                        this.ctx1.putImageData(frame1, 0, 0);
 
                         // Green rectangle
-                        var sign_bounds = digits_sign_detector.get_sign_bounds();
+                        let sign_bounds = digits_sign_detector.get_sign_bounds();
                         this.ctx1.beginPath();
                         this.ctx1.lineWidth="4";
                         this.ctx1.strokeStyle="green";
                         this.ctx1.rect(sign_bounds.get(0),sign_bounds.get(1),sign_bounds.get(2),sign_bounds.get(3));
                         this.ctx1.stroke();
+
+                        /********************** EXTRACT *********************/
+
+                        this.ctx2.drawImage(this.video, 0, 0, sign_bounds.get(2), sign_bounds.get(3));
+                        let frame2 = this.ctx2.getImageData(0, 0, sign_bounds.get(2), sign_bounds.get(3));
+                        let frame_data2 = frame2.data;
+
+                        if ( frame2.data.length == 0 )
+                            return;
+
+                        digits_sign_detector.extract();
+                        let warp = digits_sign_detector.get_sign_warp();
+
+                        for ( i = 0, j = 0; i < frame_data2.length; i += 4, j+= 1) {
+                            let avg = warp.get(j) / 3;
+                            frame_data2[i]     = avg; // red
+                            frame_data2[i + 1] = avg; // green
+                            frame_data2[i + 2] = avg; // blue
+                            frame_data2[i + 3]=255;
+                        }
+                        this.ctx2.putImageData(frame2, 0, 0);
+
+                        Module._free(work_image.byteOffset);
+
+                        /****************************************************/
 
                         if(!lastCalledTime) {
                             lastCalledTime = Date.now();
@@ -111,7 +137,9 @@
                         let delta = deltaArray.reduce(function(pv, cv) { return pv + cv; }, 0) / deltaArray.length;
                         let fps = Math.round(1/delta*100)/100;
 
-                        this.ctx1.fillText('FPS : ' + fps,10,10);
+                        this.ctx1.font="20px Helvetica";
+                        this.ctx1.fillStyle = 'green';
+                        this.ctx1.fillText('FPS : ' + fps,10,30);
 
                         return;
                     }
@@ -134,6 +162,7 @@
 
         <div>
             <canvas id="c1"></canvas>
+            <canvas id="c2"></canvas>
         </div>
     </body>
 </html>
