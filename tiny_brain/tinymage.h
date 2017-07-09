@@ -165,7 +165,7 @@ public:
         _normalize( *this, min, max );
     }
 
-    tinymage<T> get_normalize( T min, T max )
+    tinymage<T> get_normalize( T min, T max ) const
     {
         tinymage<T> output( *this );
         _normalize( output, min, max );
@@ -237,7 +237,7 @@ public:
         return get_crop( 0, starty, m_width, stopy );
     }
 
-    tinymage<float> get_dline()
+    tinymage<float> get_dline() const
     {
         tinymage<T> output( m_width, m_height );
 
@@ -250,7 +250,7 @@ public:
         return output;
     }
 
-    tinymage<float> get_dcolumn()
+    tinymage<float> get_dcolumn() const
     {
         tinymage<T> output( m_width, m_height );
 
@@ -268,7 +268,7 @@ public:
         *this = get_canvas_resize( nsx, nsy, centering_x, centering_y );
     }
 
-    tinymage<T> get_canvas_resize( std::size_t nsx, std::size_t nsy, float centering_x = 0.5f, float centering_y = 0.5f  )
+    tinymage<T> get_canvas_resize( std::size_t nsx, std::size_t nsy, float centering_x = 0.5f, float centering_y = 0.5f  ) const
     {
         // Only default dirichlet condition is managed for now
 
@@ -295,7 +295,7 @@ public:
     }
 
     template<typename U = T>
-    tinymage_if_uchar<U> get_resize( std::size_t nsx, std::size_t nsy )
+    tinymage_if_uchar<U> get_resize( std::size_t nsx, std::size_t nsy ) const
     {
         tinymage<T> output( nsx, nsy );
         stbir_resize_uint8( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0,
@@ -304,7 +304,7 @@ public:
     }
 
     template<typename U = T>
-    tinymage_if_float<U> get_resize( std::size_t nsx, std::size_t nsy )
+    tinymage_if_float<U> get_resize( std::size_t nsx, std::size_t nsy ) const
     {
         tinymage<T> output( nsx, nsy );
         stbir_resize_float( data(), static_cast<int>( m_width ), static_cast<int>( m_height ), 0,
@@ -381,7 +381,7 @@ public:
     //tinymage_if_float<U> row_sums() const
 
     template<std::size_t nb_bins>
-    std::array<std::size_t,nb_bins> get_histogram()
+    std::array<std::size_t,nb_bins> get_histogram() const
     {
         auto min = *std::min_element( begin(), end() );
         auto max = *std::max_element( begin(), end() );
@@ -397,7 +397,7 @@ public:
         return hist;
     }
 
-    tinymage<T> get_auto_threshold()
+    tinymage<T> get_auto_threshold() const
     {
         tinymage<T> output( *this );
         output.auto_threshold();
@@ -414,7 +414,7 @@ public:
 
     // returns [0...255] clamped image
     template<typename U = T>
-    tinymage_if_uchar<U> get_sobel()
+    tinymage_if_uchar<U> get_sobel() const
     {
         tinymage<T> output( m_width, m_height );
 
@@ -474,7 +474,7 @@ public:
         return output;
     }
 
-    tinymage<T> get_rotate( float angle, T pad_val = 0 )
+    tinymage<T> get_rotate( float angle, T pad_val = 0 ) const
     {
         tinymage<T> output( m_width, m_height, pad_val );
 
@@ -502,7 +502,7 @@ public:
     }
 
     tinymage<T> get_warp(   const tinymage_types::quad_coord_t& in_coords,
-                            const tinymage_types::quad_coord_t& out_coords )
+                            const tinymage_types::quad_coord_t& out_coords ) const
 	{
         // NOTE1:
         // The homography equations computation is based on :
@@ -588,7 +588,7 @@ private:
 
 private:
 
-    void _normalize( tinymage<T>& input, T min, T max )
+    void _normalize( tinymage<T>& input, T min, T max ) const
     {
         assert( max > min );
 
@@ -666,7 +666,7 @@ private:
         return static_cast<int>( std::round( result ) );
     }
 
-    void _bilinear_interpolation( T& out, float horizontal_position, float vertical_position )
+    void _bilinear_interpolation( T& out, float horizontal_position, float vertical_position ) const
     {
         // figure out the four locations (and then, four pixels)
         // that we must interpolate from the original image.
@@ -688,7 +688,7 @@ private:
     }
 
     T _bilinear_interpolation(  std::ptrdiff_t top, std::ptrdiff_t bottom, std::ptrdiff_t left, std::ptrdiff_t right,
-                                float horizontal_position, float vertical_position )
+                                float horizontal_position, float vertical_position ) const
     {
         // figure out "how far" the output pixel being considered is between *_left and *_right.
         auto horizontal_progress = horizontal_position - left;
