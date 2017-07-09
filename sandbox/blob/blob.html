@@ -104,15 +104,18 @@
 
                         /********************** EXTRACT *********************/
 
-                        this.ctx2.drawImage(this.video, 0, 0, sign_bounds.get(2), sign_bounds.get(3));
-                        let frame2 = this.ctx2.getImageData(0, 0, sign_bounds.get(2), sign_bounds.get(3));
+                        digits_sign_detector.extract();
+                        let warp_size = digits_sign_detector.get_sign_warp_size();
+                        let warp = digits_sign_detector.get_sign_warp();
+
+                        this.c2.width = warp_size.get(0);
+                        this.c2.height = warp_size.get(1);
+                        this.ctx2.drawImage(this.video, 0, 0, warp_size.get(0), warp_size.get(1));
+                        let frame2 = this.ctx2.getImageData(0, 0, warp_size.get(0), warp_size.get(1));
                         let frame_data2 = frame2.data;
 
                         if ( frame2.data.length == 0 )
                             return;
-
-                        digits_sign_detector.extract();
-                        let warp = digits_sign_detector.get_sign_warp();
 
                         for ( i = 0, j = 0; i < frame_data2.length; i += 4, j+= 1) {
                             let avg = warp.get(j) / 3;

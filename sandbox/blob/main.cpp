@@ -75,6 +75,11 @@ public:
     {
 		m_sign_helper.extract( m_img, m_sign_bounds );
 	}
+	std::vector<size_t> get_sign_warp_size()
+    {
+		const auto& warp_sign = m_sign_helper.get_sign_warp();
+		return { warp_sign.width(), warp_sign.height() };
+	}
 	std::vector<uint8_t> get_sign_warp()
     {
 		auto warp_sign = m_sign_helper.get_sign_warp().convert<uint8_t>();
@@ -102,7 +107,8 @@ EMSCRIPTEN_BINDINGS(digits_sign_detector)
         .function( "get_sign_thresh", &digits_sign_detector::get_sign_thresh )
         .function( "get_sign_bounds", &digits_sign_detector::get_sign_bounds )
 		.function( "extract", &digits_sign_detector::extract )
-		.function( "get_sign_warp", &digits_sign_detector::get_sign_warp );
+		.function( "get_sign_warp", &digits_sign_detector::get_sign_warp )
+		.function( "get_sign_warp_size", &digits_sign_detector::get_sign_warp_size );
 }
 
 int main( int argc, char **argv )
