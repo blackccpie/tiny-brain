@@ -18,14 +18,14 @@
         <script type="text/javascript" src="blob.js"></script>
         <script type="text/javascript;version=1.8">
 
-            var blob_detector;
+            var digits_sign_detector;
             var work_image;
 
             function allReady() {
 
                 console.log('allReady');
 
-                var blob_detector = new Module.blob_detector(this.video.offsetWidth,this.video.offsetHeight);
+                var digits_sign_detector = new Module.digits_sign_detector(this.video.offsetWidth,this.video.offsetHeight);
 
                 // heap allocated memory is accessible from emscripten C++
                 // var numBytes = this.video.offsetWidth * this.video.offsetHeight * 4;
@@ -77,8 +77,8 @@
 
                         work_image.set(new Uint8Array(frame.data.buffer));
                         var image_infos = { ptr : work_image.byteOffset, sizeX : this.width, sizeY : this.height };
-                        blob_detector.process(image_infos);
-                        var thresh = blob_detector.get_thresh();
+                        digits_sign_detector.process(image_infos);
+                        var thresh = digits_sign_detector.get_sign_thresh();
 
                         var data = frame.data;
 
@@ -94,11 +94,11 @@
                         Module._free(work_image.byteOffset);
 
                         // Green rectangle
-                        var blob = blob_detector.get_blob();
+                        var sign_bounds = digits_sign_detector.get_sign_bounds();
                         this.ctx1.beginPath();
                         this.ctx1.lineWidth="4";
                         this.ctx1.strokeStyle="green";
-                        this.ctx1.rect(blob.get(0),blob.get(1),blob.get(2),blob.get(3));
+                        this.ctx1.rect(sign_bounds.get(0),sign_bounds.get(1),sign_bounds.get(2),sign_bounds.get(3));
                         this.ctx1.stroke();
 
                         if(!lastCalledTime) {
@@ -120,7 +120,7 @@
                 processor.doLoad();
             }
 
-            //blob_detector.delete(); // TODO : when?
+            //digits_sign_detector.delete(); // TODO : when?
 
         </script>
     </head>

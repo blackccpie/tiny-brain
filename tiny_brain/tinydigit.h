@@ -30,6 +30,9 @@ THE SOFTWARE.
 
 #include <iostream>
 
+// digit recognition helper class
+// -> extracts the digits zone on a uniform white background
+// -> uses cnn to infer the digits
 class tinydigit
 {
 public:

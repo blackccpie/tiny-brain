@@ -63,6 +63,7 @@ namespace tinymage_types {
     using quad_coord_t = std::tuple<coord_t,coord_t,coord_t,coord_t>;
 }
 
+// lightweight header only image class
 template<typename T=float>
 class tinymage final : private std::vector<T>
 {
