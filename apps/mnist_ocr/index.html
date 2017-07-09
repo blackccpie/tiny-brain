@@ -2,10 +2,10 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>EM Test</title>
+    <title>FULL WEBASSEMBLY CNN DIGIT RECOGNITION</title>
     <script type="text/javascript" src="mnist_ocr.js"></script>
     <style>
-		body { background: black; color:#CCCCCC; }
+		body { background: black; color:#CCCCCC; font-family: helvetica; }
         .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
         textarea.emscripten { font-family: monospace; width: 80%; }
         div.emscripten { text-align: center; }
@@ -38,7 +38,7 @@
 
     function _configureModule(){
         Module['print'] = (function() {
-            var element = document.getElementById('output');
+            let element = document.getElementById('output');
             if (element) element.value = ''; // clear browser cache
             return function(text) {
                 if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
@@ -58,9 +58,9 @@
 
     function _arrayToHeap(typedArray){
         // heap allocated memory is accessible from emscripten C++
-        var numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
-        var ptr = Module._malloc(numBytes);
-        var heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+        let numBytes = typedArray.length * typedArray.BYTES_PER_ELEMENT;
+        let ptr = Module._malloc(numBytes);
+        let heapBytes = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
         heapBytes.set(new Uint8Array(typedArray.buffer));
         return heapBytes;
     }
@@ -77,10 +77,12 @@
 
         var image = new Image();
 
+        var startTime;
+
         image.onload=function(){
 
-            var canvas_ocr = document.getElementById("canvas_ocr");
-            var context_ocr = canvas_ocr.getContext('2d');
+            let canvas_ocr = document.getElementById("canvas_ocr");
+            let context_ocr = canvas_ocr.getContext('2d');
 
             canvas_ocr.width = image.naturalWidth;
             canvas_ocr.height = image.naturalHeight;
@@ -89,34 +91,38 @@
 
             context_ocr.drawImage(image,0,0,canvas_ocr.width,canvas_ocr.height);
 
-            var dataSrc = context_ocr.getImageData(0,0,canvas_ocr.width,canvas_ocr.height);
-            var dataTrg = _arrayToHeap(dataSrc.data);
+            let dataSrc = context_ocr.getImageData(0,0,canvas_ocr.width,canvas_ocr.height);
+            let dataTrg = _arrayToHeap(dataSrc.data);
 
-            var image_infos = { ptr : dataTrg.byteOffset, sizeX : canvas_ocr.width, sizeY : canvas_ocr.height };
+            let image_infos = { ptr : dataTrg.byteOffset, sizeX : canvas_ocr.width, sizeY : canvas_ocr.height };
 
             console.log('processing...');
+
+            startTime = Date.now();
 
             ocr_wrapper.process(image_infos,function onProcessed() {
 
                 console.log('processed!');
 
-                var rec = ocr_wrapper.reco_string();
+                let deltaTime = Date.now() - startTime;
+
+                let rec = ocr_wrapper.reco_string();
                 console.log('found ' + rec);
-                document.getElementById('digits').innerHTML = 'might be ' + rec + '!';
+                document.getElementById('digits').innerHTML = ' and the convolutional network thinks these digits might be <b>' + rec + '</b>! (guessed in ' + deltaTime + 'ms)';
 
-                var canvas_cropped = document.getElementById("canvas_cropped");
-                var context_cropped = canvas_cropped.getContext('2d');
+                let canvas_cropped = document.getElementById("canvas_cropped");
+                let context_cropped = canvas_cropped.getContext('2d');
 
-                var cropped = ocr_wrapper.cropped_numbers();
-                var cropped_size = ocr_wrapper.cropped_size();
+                let cropped = ocr_wrapper.cropped_numbers();
+                let cropped_size = ocr_wrapper.cropped_size();
                 canvas_cropped.width = cropped_size.get(0);
                 canvas_cropped.height = cropped_size.get(1);
 
-                var dataTrg = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
-                var data = dataTrg.data;
+                let dataTrg = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
+                let data = dataTrg.data;
                 //console.log('debug ' + cropped.get(50+(50*canvas_cropped.width)))
                 for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
-                    var avg = cropped.get(j) ? 255 : 50;
+                    let avg = cropped.get(j) ? 255 : 50;
                     data[i]     = avg; // red
                     data[i + 1] = avg; // green
                     data[i + 2] = avg; // blue
