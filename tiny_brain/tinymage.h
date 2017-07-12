@@ -184,6 +184,21 @@ public:
         return static_cast<T>( sum / ( m_width * m_height ) );
     }
 
+    float line_centroid( size_t index )
+    {
+        auto _mean = 0.f;
+        auto _total = 0.f;
+        tinymage_forX( (*this),x )
+        {
+            if ( c_at(x,index) != 0 )
+            {
+                _mean += x+1;
+                _total += 1;
+            }
+        }
+        return _mean / _total;
+    }
+
     void threshold( T thresh )
     {
         std::for_each( begin(), end(), [&]( T& val )

@@ -110,7 +110,7 @@ public:
     		if ( dline_sums[j1] == 0 )
     			break;
 
-    	//std::cout << i0 << " " << i1 << " " << j0 << " " << j1 << std::endl;
+    	std::cout << i0 << " " << i1 << " " << j0 << " " << j1 << std::endl;
 
     	thresh_cropped.display();
 
@@ -118,7 +118,15 @@ public:
     	auto h = cropped.height()-1;
 
     	//tinymage_types::quad_coord_t incoord{ { 21,0 },{ 531,19 },{ 523,256 },{ 0,235 } };
-    	tinymage_types::quad_coord_t incoord{ {i0,0U}, {w,j0}, {i1,h}, {0U,j1} };
+
+        std::cout << "centroid : " << thresh_cropped.line_centroid( j0 ) << std::endl;
+
+        bool left = thresh_cropped.line_centroid( j0 ) < thresh_cropped.width()/2.f;
+    	auto incoord = left ? tinymage_types::quad_coord_t{ {0U,j0}, {i1,0}, {w,j1}, {i0,h} }
+    		: tinymage_types::quad_coord_t{ {i0,0U}, {w,j0}, {i1,h}, {0U,j1} };
+
+        std::cout << "warping mode : " << std::string( left ? "left" : "right" ) << std::endl;
+
     	tinymage_types::quad_coord_t outcoord{ {0U,0U}, {w,0U}, {w,h}, {0U,h} };
     	m_warped = cropped.get_warp( incoord, outcoord );
     	m_warped.remove_border( 2 );
