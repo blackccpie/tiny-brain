@@ -31,3 +31,4 @@ add_subdirectory(mnist_autotrain)
 endif ()
 
 add_subdirectory(mnist_ocr)
+add_subdirectory(mnist_sign)
