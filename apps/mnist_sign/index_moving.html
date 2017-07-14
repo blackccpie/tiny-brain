@@ -18,22 +18,19 @@
         <script type="text/javascript" src="mnist_sign.js"></script>
         <script type="text/javascript;version=1.8">
 
-            var digits_sign_detector;
             var work_image;
 
             function allReady() {
 
-                console.log('allReady');
-
-                var digits_sign_detector = new Module.digits_sign_detector(this.video.offsetWidth,this.video.offsetHeight);
+                let digits_sign_detector = new Module.digits_sign_detector(this.video.offsetWidth,this.video.offsetHeight);
 
                 // heap allocated memory is accessible from emscripten C++
                 // var numBytes = this.video.offsetWidth * this.video.offsetHeight * 4;
                 // var ptr = Module._malloc(numBytes);
                 // var work_image = new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
 
-                var deltaArray = new Array(50);
-                var lastCalledTime;
+                let deltaArray = new Array(50);
+                let lastCalledTime;
 
                 let processor = {
                     timerCallback: function() {

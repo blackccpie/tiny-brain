@@ -31,10 +31,8 @@
 
     <hr/>
 
-    <script type="text/javascript" src="mnist_ocr.js"></script>
-	<script type="text/javascript">
-
-    var ocr_wrapper;
+    <script type="text/javascript" src="mnist_sign.js"></script>
+	<script type="text/javascript;version=1.8">
 
     function _configureModule(){
         Module['print'] = (function() {
@@ -69,15 +67,13 @@
         Module._free(heapBytes.byteOffset);
     }
 
-	function allReady() {
+    function allReady() {
 
         _configureModule();
 
-        ocr_wrapper = new Module.ocr_wrapper;
+        let image = new Image();
 
-        var image = new Image();
-
-        var startTime;
+        let startTime;
 
         image.onload=function(){
 
@@ -86,6 +82,8 @@
 
             canvas_ocr.width = image.naturalWidth;
             canvas_ocr.height = image.naturalHeight;
+
+            let digits_sign_detector = new Module.digits_sign_detector(canvas_ocr.width,canvas_ocr.height);
 
             console.log( 'natural image size is ' + image.naturalWidth + 'x' + image.naturalHeight );
 
@@ -96,47 +94,49 @@
 
             let image_infos = { ptr : dataTrg.byteOffset, sizeX : canvas_ocr.width, sizeY : canvas_ocr.height };
 
-            console.log('processing...');
+            console.log('locating and extracting...');
 
             startTime = Date.now();
 
-            ocr_wrapper.process(image_infos,function onProcessed() {
+            digits_sign_detector.locate(image_infos);
+            digits_sign_detector.extract();
 
-                console.log('processed!');
+            console.log('finished!');
 
-                let deltaTime = Date.now() - startTime;
+            let deltaTime = Date.now() - startTime;
 
-                let rec = ocr_wrapper.reco_string();
-                console.log('found ' + rec);
-                document.getElementById('digits').innerHTML = ' and the convolutional network thinks these digits might be <b>' + rec + '</b>! (guessed in ' + deltaTime + 'ms)';
+            let rec = ocr_wrapper.reco_string();
+            //console.log('found ' + rec);
+            //document.getElementById('digits').innerHTML = ' and the convolutional network thinks these digits might be <b>' + rec + '</b>! (guessed in ' + deltaTime + 'ms)';
 
-                let canvas_cropped = document.getElementById("canvas_cropped");
-                let context_cropped = canvas_cropped.getContext('2d');
+            let canvas_cropped = document.getElementById("canvas_cropped");
+            let context_cropped = canvas_cropped.getContext('2d');
 
-                let cropped = ocr_wrapper.cropped_numbers();
-                let cropped_size = ocr_wrapper.cropped_size();
-                canvas_cropped.width = cropped_size.get(0);
-                canvas_cropped.height = cropped_size.get(1);
+            let cropped = digits_sign_detector.get_sign_warp();
+            let cropped_size = digits_sign_detector.get_sign_warp_size();
+            canvas_cropped.width = cropped_size.get(0);
+            canvas_cropped.height = cropped_size.get(1);
 
-                let dataTrg = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
-                let data = dataTrg.data;
-                //console.log('debug ' + cropped.get(50+(50*canvas_cropped.width)))
-                for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
-                    let avg = cropped.get(j) ? 255 : 50;
-                    data[i]     = avg; // red
-                    data[i + 1] = avg; // green
-                    data[i + 2] = avg; // blue
-                    data[i + 3]=255;
-                }
-                context_cropped.putImageData(dataTrg, 0, 0);
-            });
+            console.log('warped size is ' + canvas_cropped.width + 'x' + canvas_cropped.height);
 
-            ocr_wrapper.delete();
+            //let dataTrg = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
+            //let data = dataTrg.data;
+            // //console.log('debug ' + cropped.get(50+(50*canvas_cropped.width)))
+            // for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
+            //     let avg = cropped.get(j) ? 255 : 50;
+            //     data[i]     = avg; // red
+            //     data[i + 1] = avg; // green
+            //     data[i + 2] = avg; // blue
+            //     data[i + 3]=255;
+            // }
+            // context_cropped.putImageData(dataTrg, 0, 0);
+            //
+            digits_sign_detector.delete();
 
             _freeArray(dataTrg);
-        };
-        image.src = "123456.png";
-	}
+        }
+        image.src = "3167-sign.png";
+    }
 
 	</script>
 </body>
