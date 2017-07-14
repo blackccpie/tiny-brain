@@ -190,11 +190,8 @@ public:
         auto _total = 0.f;
         tinymage_forX( (*this),x )
         {
-            if ( c_at(x,index) != 0 )
-            {
-                _mean += x+1;
-                _total += 1;
-            }
+            _mean += x * c_at(x,index);
+            _total += c_at(x,index);
         }
         return _mean / _total;
     }

@@ -121,7 +121,7 @@ public:
 
         std::cout << "centroid : " << thresh_cropped.line_centroid( j0 ) << std::endl;
 
-        bool left = thresh_cropped.line_centroid( j0 ) < thresh_cropped.width()/2.f;
+        bool left = thresh_cropped.line_centroid( j0 ) < ( thresh_cropped.width() - 1 ) / 2.f;
     	auto incoord = left ? tinymage_types::quad_coord_t{ {0U,j0}, {i1,0}, {w,j1}, {i0,h} }
     		: tinymage_types::quad_coord_t{ {i0,0U}, {w,j0}, {i1,h}, {0U,j1} };
 
