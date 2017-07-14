@@ -75,6 +75,12 @@ public:
     {
 		m_sign_helper.extract( m_img, m_sign_bounds );
 	}
+	std::string recognize()
+    {
+		const auto& warp_sign = m_sign_helper.get_sign_warp();
+		m_digit_ocr_helper.process( warp_sign );
+		return m_digit_ocr_helper.reco_string();
+	}
 	std::vector<size_t> get_sign_warp_size()
     {
 		const auto& warp_sign = m_sign_helper.get_sign_warp();
@@ -93,6 +99,7 @@ private:
 	tinymage<float> m_img;
 
     tinysign m_sign_helper;
+	tinydigit m_digit_ocr_helper;
 };
 
 // Binding code
@@ -108,7 +115,8 @@ EMSCRIPTEN_BINDINGS(digits_sign_detector)
         .function( "get_sign_bounds", &digits_sign_detector::get_sign_bounds )
 		.function( "extract", &digits_sign_detector::extract )
 		.function( "get_sign_warp", &digits_sign_detector::get_sign_warp )
-		.function( "get_sign_warp_size", &digits_sign_detector::get_sign_warp_size );
+		.function( "get_sign_warp_size", &digits_sign_detector::get_sign_warp_size )
+		.function( "recognize", &digits_sign_detector::recognize );
 }
 
 int main( int argc, char **argv )
@@ -140,13 +148,13 @@ int main( int argc, char **argv )
 
 	const auto& warped = m_sign_helper.get_sign_warp();
 
-	tinydigit digit_ocr;
-	digit_ocr.process( warped );
+	tinydigit digit_ocr_helper;
+	digit_ocr_helper.process( warped );
 
-    auto& cropped_numbers = digit_ocr.cropped_numbers();
+    auto& cropped_numbers = digit_ocr_helper.cropped_numbers();
     cropped_numbers.display();
 
-    std::cout << "INFERRED DIGITS ARE : " << digit_ocr.reco_string() << std::endl;
+    std::cout << "INFERRED DIGITS ARE : " << digit_ocr_helper.reco_string() << std::endl;
 
 	return 0;
 }
