@@ -57,10 +57,10 @@ public:
         });
 
 		m_sign_helper.locate( m_img );
+		m_sign_bounds = m_sign_helper.get_sign_bounds();
     }
     std::vector<size_t> get_sign_bounds()
     {
-		m_sign_bounds = m_sign_helper.get_sign_bounds();
         auto w = m_sign_bounds[2]-m_sign_bounds[0];
         auto h = m_sign_bounds[3]-m_sign_bounds[1];
         return { m_sign_bounds[0], m_sign_bounds[1], w, h };
@@ -130,7 +130,7 @@ static const unsigned char green[] = { 0,255,0 };
 int main( int argc, char **argv )
 {
     tinymage<float> img;
-    img.load( "../sandbox/ocr_ex.png" );
+    img.load( "../../data/ocr/images/3167-sign.png" );
 
 	tinysign m_sign_helper( img.width(), img.height() );
 	m_sign_helper.locate( img );

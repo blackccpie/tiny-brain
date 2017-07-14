@@ -84,6 +84,8 @@ public:
             cropped_number.canvas_resize( 32, 32 );
             cropped_number.normalize( -1.f, 1.f );
 
+            std::cout << "tinydigit::process - computing augmented output" << std::endl;
+
 			// recognize using data augmentation
             auto res = _compute_augmented_output( cropped_number );
 

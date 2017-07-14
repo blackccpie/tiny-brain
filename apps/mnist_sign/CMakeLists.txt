@@ -25,10 +25,13 @@ project (mnist_sign)
 
 if (USE_EMSCRIPTEN)
 
-# TODO : ALLOW_MEMORY_GROWTH prevents some optimizations, try to define new total memory size
-# NO_EXIT_RUNTIME is here to have std::cout available event after main has finished
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -O3 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
+	# TODO : ALLOW_MEMORY_GROWTH prevents some optimizations, try to define new total memory size
+	# NO_EXIT_RUNTIME is here to have std::cout available event after main has finished
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=106168320 -O3 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
+	#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
+
+    # no WebAssembly multi-threading support for now
+    add_definitions( -DCNN_SINGLE_THREAD )
 
 else ()
 
@@ -59,7 +62,9 @@ if (USE_EMSCRIPTEN)
         FILES
         ${CMAKE_SOURCE_DIR}/bin/mnist_sign.wasm
         ${CMAKE_SOURCE_DIR}/bin/mnist_sign.data
-        index.html
+        ${CMAKE_SOURCE_DIR}/data/ocr/images/3167-sign.png
+        index_still.html
+        index_moving.html
         run.sh
     	DESTINATION mnist_sign
     )

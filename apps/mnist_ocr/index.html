@@ -118,8 +118,8 @@
                 canvas_cropped.width = cropped_size.get(0);
                 canvas_cropped.height = cropped_size.get(1);
 
-                let dataTrg = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
-                let data = dataTrg.data;
+                let dataCropped = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
+                let data = dataCropped.data;
                 //console.log('debug ' + cropped.get(50+(50*canvas_cropped.width)))
                 for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
                     let avg = cropped.get(j) ? 255 : 50;
@@ -128,7 +128,7 @@
                     data[i + 2] = avg; // blue
                     data[i + 3]=255;
                 }
-                context_cropped.putImageData(dataTrg, 0, 0);
+                context_cropped.putImageData(dataCropped, 0, 0);
             });
 
             ocr_wrapper.delete();
