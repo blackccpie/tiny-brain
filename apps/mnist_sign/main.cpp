@@ -138,11 +138,13 @@ int main( int argc, char **argv )
 	auto sign_thresh = m_sign_helper.get_sign_thresh();
 	auto sign_bounds = m_sign_helper.get_sign_bounds();
 
+#ifdef USE_CIMG
 	// no smarter way to copy from grayscale to color image :-(
     cimg_library::CImg<float> cimg_out( static_cast<int>( img.width() ), static_cast<int>( img.height() ), 1, 3 );
     cimg_forXYC(cimg_out,x,y,c) { cimg_out(x,y,c) = sign_thresh.c_at(x,y) > 0 ? 85.f : 0.f; }
 	cimg_out.draw_rectangle( sign_bounds[0], sign_bounds[1], sign_bounds[2], sign_bounds[3], green, .25f );
     cimg_out.display();
+#endif
 
 	m_sign_helper.extract( img, sign_bounds );
 
