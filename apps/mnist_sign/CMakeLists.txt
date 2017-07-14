@@ -21,7 +21,7 @@
 #THE SOFTWARE.
 
 cmake_minimum_required (VERSION 3.2)
-project (blob)
+project (mnist_sign)
 
 if (USE_EMSCRIPTEN)
 
@@ -42,11 +42,27 @@ set (sources_list
 main.cpp
 )
 
-add_executable(blob ${sources_list} ${headers_list})
+add_executable(mnist_sign ${sources_list} ${headers_list})
 
-target_link_libraries(blob
+target_link_libraries(mnist_sign
     pthread
     ${extra_link_libs}
 )
 
-cotire(blob)
+install(
+    TARGETS mnist_sign
+    DESTINATION mnist_sign
+)
+
+if (USE_EMSCRIPTEN)
+    install(
+        FILES
+        ${CMAKE_SOURCE_DIR}/bin/mnist_sign.wasm
+        #${CMAKE_SOURCE_DIR}/bin/mnist_sign.data
+        index.html
+        run.sh
+    	DESTINATION mnist_sign
+    )
+endif ()
+
+cotire(mnist_sign)
