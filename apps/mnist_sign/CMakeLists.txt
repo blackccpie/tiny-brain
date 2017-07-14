@@ -27,7 +27,7 @@ if (USE_EMSCRIPTEN)
 
 # TODO : ALLOW_MEMORY_GROWTH prevents some optimizations, try to define new total memory size
 # NO_EXIT_RUNTIME is here to have std::cout available event after main has finished
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --bind -s WASM=1  -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -O3 --preload-file ${CMAKE_SOURCE_DIR}/data@/")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --emrun")
 
 else ()
@@ -58,7 +58,7 @@ if (USE_EMSCRIPTEN)
     install(
         FILES
         ${CMAKE_SOURCE_DIR}/bin/mnist_sign.wasm
-        #${CMAKE_SOURCE_DIR}/bin/mnist_sign.data
+        ${CMAKE_SOURCE_DIR}/bin/mnist_sign.data
         index.html
         run.sh
     	DESTINATION mnist_sign
