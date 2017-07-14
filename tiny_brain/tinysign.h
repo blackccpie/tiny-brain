@@ -97,13 +97,13 @@ public:
     	//drow_dums.display();
 
     	int i0,i1,j0,j1;
-    	for ( i0=1; i0<drow_dums.width(); i0++ )
+    	for ( i0=1; i0<static_cast<int>(drow_dums.width()); i0++ )
     		if ( drow_dums[i0] == 0 )
     			break;
     	for ( i1=drow_dums.width()-2; i1>=0; i1-- )
     		if ( drow_dums[i1] == 0 )
     			break;
-    	for ( j0=1; j0<dline_sums.height(); j0++ )
+    	for ( j0=1; j0<static_cast<int>(dline_sums.height()); j0++ )
     		if ( dline_sums[j0] == 0 )
     			break;
     	for ( j1=dline_sums.height()-2; j1>=0; j1-- )
