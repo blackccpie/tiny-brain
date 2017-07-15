@@ -101,7 +101,14 @@
             startTime = Date.now();
 
             digits_sign_detector.locate(image_infos);
+
+            let locateTime = Date.now() - startTime;
+            let interStartTime = Date.now();
+
             digits_sign_detector.extract();
+
+            let extractTime = Date.now() - interStartTime;
+            interStartTime = Date.now();
 
             console.log('finished!');
 
@@ -109,11 +116,12 @@
 
             digits_sign_detector.recognize();
 
+            let recoTime = Date.now() - interStartTime;
             let deltaTime = Date.now() - startTime;
 
             let rec = digits_sign_detector.reco_string();
             console.log('found ' + rec);
-            document.getElementById('digits').innerHTML = ' and the convolutional network thinks these digits might be <b>' + rec + '</b>! (guessed in ' + deltaTime + 'ms)';
+            document.getElementById('digits').innerHTML = ' and the convolutional network thinks these digits might be <b>' + rec + '</b>! (guessed in ' + deltaTime + 'ms - L' + locateTime + 'E' + extractTime + 'R' + recoTime + ')';
 
             // CROPPED CANVAS
             {
