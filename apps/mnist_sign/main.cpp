@@ -41,7 +41,10 @@ class digits_sign_detector
 public:
     digits_sign_detector( size_t sx, size_t sy ) : m_img( sx, sy ), m_sign_helper( sx, sy )
         { std::cout << "digits_sign_detector::digits_sign_detector - " << sx << "x" << sy << std::endl; }
-    void locate( emscripten::val image )
+
+	/************************ LOCATE ************************/
+
+	void locate( emscripten::val image )
     {
         auto ptr = reinterpret_cast<uint8_t*>( image["ptr"].as<int>() );
         auto sx = image["sizeX"].as<int>();
@@ -57,13 +60,13 @@ public:
         });
 
 		m_sign_helper.locate( m_img );
-		m_sign_bounds = m_sign_helper.get_sign_bounds();
     }
     std::vector<size_t> get_sign_bounds()
     {
-        auto w = m_sign_bounds[2]-m_sign_bounds[0];
-        auto h = m_sign_bounds[3]-m_sign_bounds[1];
-        return { m_sign_bounds[0], m_sign_bounds[1], w, h };
+		const auto& sign_bounds = m_sign_helper.get_sign_bounds();
+        auto w = sign_bounds[2] - sign_bounds[0];
+        auto h = sign_bounds[3] - sign_bounds[1];
+        return { sign_bounds[0], sign_bounds[1], w, h };
     }
     std::vector<uint8_t> get_sign_thresh()
     {
@@ -71,15 +74,12 @@ public:
         return { thresh_sign.data(), thresh_sign.data() + thresh_sign.size() };
     }
 
+	/************************ EXTRACT ************************/
+
 	void extract()
     {
-		m_sign_helper.extract( m_img, m_sign_bounds );
-	}
-	std::string recognize()
-    {
-		const auto& warp_sign = m_sign_helper.get_sign_warp();
-		m_digit_ocr_helper.process( warp_sign );
-		return m_digit_ocr_helper.reco_string();
+		const auto& sign_bounds = m_sign_helper.get_sign_bounds();
+		m_sign_helper.extract( m_img, sign_bounds );
 	}
 	std::vector<size_t> get_sign_warp_size()
     {
@@ -92,9 +92,29 @@ public:
         return { warp_sign.data(), warp_sign.data() + warp_sign.size() };
 	}
 
-private:
+	/************************ RECOGNIZE ************************/
 
-	std::vector<size_t> m_sign_bounds;
+	void recognize()
+    {
+		const auto& warp_sign = m_sign_helper.get_sign_warp();
+		m_digit_ocr_helper.process( warp_sign );
+	}
+	std::vector<size_t> get_crop_size()
+	{
+		auto& cropped = m_digit_ocr_helper.cropped_numbers();
+	    return { { cropped.width(), cropped.height() } };
+	}
+    std::vector<uint8_t> get_crop()
+	{
+		auto output = m_digit_ocr_helper.cropped_numbers().convert<uint8_t>();
+		return std::vector<uint8_t>( output.data(), output.data() + output.size() );
+	}
+	std::string reco_string()
+	{
+		return m_digit_ocr_helper.reco_string();
+	}
+
+private:
 
 	tinymage<float> m_img;
 
@@ -116,7 +136,10 @@ EMSCRIPTEN_BINDINGS(digits_sign_detector)
 		.function( "extract", &digits_sign_detector::extract )
 		.function( "get_sign_warp", &digits_sign_detector::get_sign_warp )
 		.function( "get_sign_warp_size", &digits_sign_detector::get_sign_warp_size )
-		.function( "recognize", &digits_sign_detector::recognize );
+		.function( "recognize", &digits_sign_detector::recognize )
+		.function( "get_crop", &digits_sign_detector::get_crop )
+		.function( "get_crop_size", &digits_sign_detector::get_crop_size )
+		.function( "reco_string", &digits_sign_detector::reco_string );
 }
 
 int main( int argc, char **argv )

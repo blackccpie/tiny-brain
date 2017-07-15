@@ -20,6 +20,8 @@
     <hr/>
 
     <div>
+        This is the digits warp...
+        <canvas id="canvas_warped">your warped canvas loads here</canvas>
         This is the digits crop...
         <canvas id="canvas_cropped">your cropped canvas loads here</canvas>
     	<label id="digits"></label>
@@ -105,34 +107,63 @@
 
             _freeArray(dataTrg);
 
-            let rec = digits_sign_detector.recognize();
+            digits_sign_detector.recognize();
 
             let deltaTime = Date.now() - startTime;
 
+            let rec = digits_sign_detector.reco_string();
             console.log('found ' + rec);
             document.getElementById('digits').innerHTML = ' and the convolutional network thinks these digits might be <b>' + rec + '</b>! (guessed in ' + deltaTime + 'ms)';
 
-            let canvas_cropped = document.getElementById("canvas_cropped");
-            let context_cropped = canvas_cropped.getContext('2d');
+            // CROPPED CANVAS
+            {
+                let canvas_cropped = document.getElementById("canvas_cropped");
+                let context_cropped = canvas_cropped.getContext('2d');
 
-            let cropped = digits_sign_detector.get_sign_warp();
-            let cropped_size = digits_sign_detector.get_sign_warp_size();
-            canvas_cropped.width = cropped_size.get(0);
-            canvas_cropped.height = cropped_size.get(1);
+                let cropped = digits_sign_detector.get_crop();
+                let cropped_size = digits_sign_detector.get_crop_size();
+                canvas_cropped.width = cropped_size.get(0);
+                canvas_cropped.height = cropped_size.get(1);
 
-            console.log('warped size is ' + canvas_cropped.width + 'x' + canvas_cropped.height);
+                console.log('cropped size is ' + canvas_cropped.width + 'x' + canvas_cropped.height);
 
-            let dataCropped = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
-            let data = dataCropped.data;
+                let dataCropped = context_cropped.createImageData(canvas_cropped.width,canvas_cropped.height);
+                let data = dataCropped.data;
 
-            for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
-                let avg = cropped.get(j) / 3;//? 255 : 50;
-                data[i]     = avg; // red
-                data[i + 1] = avg; // green
-                data[i + 2] = avg; // blue
-                data[i + 3]=255;
+                for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
+                    let avg = cropped.get(j) ? 255 : 50;
+                    data[i]     = avg; // red
+                    data[i + 1] = avg; // green
+                    data[i + 2] = avg; // blue
+                    data[i + 3]=255;
+                }
+                context_cropped.putImageData(dataCropped, 0, 0);
             }
-            context_cropped.putImageData(dataCropped, 0, 0);
+
+            // WARPED CANVAS
+            {
+                let canvas_warped = document.getElementById("canvas_warped");
+                let context_warped = canvas_warped.getContext('2d');
+
+                let warped = digits_sign_detector.get_sign_warp();
+                let warped_size = digits_sign_detector.get_sign_warp_size();
+                canvas_warped.width = warped_size.get(0);
+                canvas_warped.height = warped_size.get(1);
+
+                console.log('warped size is ' + canvas_warped.width + 'x' + canvas_warped.height);
+
+                let dataWarped = context_warped.createImageData(canvas_warped.width,canvas_warped.height);
+                let data = dataWarped.data;
+
+                for ( i = 0, j = 0; i < data.length; i += 4, j+= 1) {
+                    let avg = warped.get(j) / 3;
+                    data[i]     = avg; // red
+                    data[i + 1] = avg; // green
+                    data[i + 2] = avg; // blue
+                    data[i + 3]=255;
+                }
+                context_warped.putImageData(dataWarped, 0, 0);
+            }
 
             digits_sign_detector.delete();
         }
