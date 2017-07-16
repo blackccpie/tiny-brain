@@ -77,6 +77,8 @@ public:
             std::cout << "tinydigit::process - cropping at " << ni.first << " " << ni.second << std::endl;
             auto cropped_number = m_cropped_numbers.get_columns( ni.first, ni.second );
 
+            //cropped_number.display();
+
             std::cout << "tinydigit::process - centering number" << std::endl;
             _center_number( cropped_number );
 
@@ -137,6 +139,8 @@ private:
             vec_res.emplace_back(
                 m_net_manager.predict( tiny_dnn::vec_t( rotated.data(), rotated.data() + rotated.size() ) )
             );
+            //std::cout << "network_manager::compute_augmented_output - " <<
+            //    *std::max_element( vec_res.back().begin(), vec_res.back().end() ) << std::endl;
         }
 
         // TODO : computing a mean image would also makes sense!
@@ -284,7 +288,7 @@ private:
     {
         // Compute row sums image
         tinymage<float> row_sums( input.row_sums() );
-        row_sums.threshold( 2.f );
+        row_sums.threshold( g_min_digit_thickness );
         //row_sums.display();
 
         std::size_t startX = 0;
@@ -309,7 +313,7 @@ private:
 
         // Compute line sums image
         tinymage<float> line_sums( input.line_sums() );
-        line_sums.threshold( 2.f );
+        line_sums.threshold( g_min_digit_thickness );
         //line_sums.display();
 
         std::size_t startY = 0;
@@ -376,6 +380,8 @@ private:
     }
 
 private:
+
+    static constexpr auto g_min_digit_thickness = 1.f; // TODO-AM compute smartly??
 
     std::vector<reco> m_recognitions;
     tinymage<float> m_cropped_numbers;
