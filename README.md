@@ -26,4 +26,4 @@ Full-webassemby mnist digit recognition demo can be viewed online here:
 
 [Digits localization and recognition on white background](http://blackccpie.free.fr/ocr/)
 
-[Digits sign localization, extraction, warping and recognition  (in progress...3/4 correct guesses)](http://blackccpie.free.fr/sign/index.html/)
+[Digits sign localization, extraction, warping and recognition  (in progress...3/4 correct guesses)](http://blackccpie.free.fr/sign/)
