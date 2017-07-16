@@ -20,8 +20,10 @@ tiny-brain includes tiny-dnn as a _git submodule_, therefore use the following c
 git clone --recursive https://github.com/blackccpie/tiny-brain.git
 ```
 
-****Demo****
+****Demos****
 
-A full-webassemby mnist digit recognition demo can be viewed online here:
+Full-webassemby mnist digit recognition demo can be viewed online here:
 
-http://blackccpie.free.fr/ocr/
+[Digits localization and recognition on white background](http://blackccpie.free.fr/ocr/)
+
+[Digits sign localization, extraction, warping and recognition  (in progress...3/4 correct guesses)](http://blackccpie.free.fr/sign/index.html/)
