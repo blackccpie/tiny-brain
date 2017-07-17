@@ -119,6 +119,15 @@
             let recoTime = Date.now() - interStartTime;
             let deltaTime = Date.now() - startTime;
 
+            // GREEN RECTANGLE ON SIGN LOCATION
+            let sign_bounds = digits_sign_detector.get_sign_bounds();
+            context_ocr.beginPath();
+            context_ocr.lineWidth="4";
+            context_ocr.strokeStyle="green";
+            context_ocr.rect(sign_bounds.get(0),sign_bounds.get(1),sign_bounds.get(2),sign_bounds.get(3));
+            context_ocr.stroke();
+
+            // RECOGNIZED STRING
             let rec = digits_sign_detector.reco_string();
             console.log('found ' + rec);
             document.getElementById('digits').innerHTML = ' and the convolutional network thinks these digits might be <b>' + rec + '</b>! (guessed in ' + deltaTime + 'ms - L' + locateTime + 'E' + extractTime + 'R' + recoTime + ')';
