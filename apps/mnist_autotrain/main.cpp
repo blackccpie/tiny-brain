@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 #include "tiny_dnn/tiny_dnn.h"
 
-#include "adamax.h"
 //#include "mnist_csv_parser.h"
 
 #include <iostream>
