@@ -1,0 +1,2 @@
+kaggle-mnist-model : trained on 32x32 [-1...1] images
+caffe-mnist-model : trained on 28x28 [0...1] images
