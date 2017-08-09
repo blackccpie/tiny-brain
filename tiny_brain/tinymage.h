@@ -237,17 +237,17 @@ public:
         crop( px_size, px_size, m_width - px_size, m_height - px_size );
     }
 
-    void shift( int sx, int sy )
+    void shift( int sx, int sy, T pad_val = 0 )
     {
-        *this = get_shift( sx, sy );
+        *this = get_shift( sx, sy, pad_val );
     }
 
-    tinymage<T> get_shift( int sx, int sy )
+    tinymage<T> get_shift( int sx, int sy, T pad_val = 0 )
     {
         assert( std::abs( sx ) <= m_width );
         assert( std::abs( sy ) <= m_height );
 
-        tinymage<T> output( m_width, m_height );
+        tinymage<T> output( m_width, m_height, pad_val );
 
         std::size_t startx = std::max( sx, 0 );
         std::size_t stopx = std::min( m_width, m_width+sx );
