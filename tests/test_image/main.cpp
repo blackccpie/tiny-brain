@@ -47,6 +47,9 @@ int main( int argc, char **argv )
     work.auto_threshold();
     work.display();
 
+    tinymage<unsigned char> shift = work.get_shift( -5, 5 );
+    shift.display();
+
     tinymage<unsigned char> crop = work.get_crop( 88, 185, 380, 275 );
     crop.display();
 

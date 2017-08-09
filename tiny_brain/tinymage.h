@@ -237,6 +237,30 @@ public:
         crop( px_size, px_size, m_width - px_size, m_height - px_size );
     }
 
+    void shift( int sx, int sy )
+    {
+        *this = get_shift( sx, sy );
+    }
+
+    tinymage<T> get_shift( int sx, int sy )
+    {
+        assert( std::abs( sx ) <= m_width );
+        assert( std::abs( sy ) <= m_height );
+
+        tinymage<T> output( m_width, m_height );
+
+        std::size_t startx = std::max( sx, 0 );
+        std::size_t stopx = std::min( m_width, m_width+sx );
+        std::size_t starty = std::max( sy, 0 );
+        std::size_t stopy = std::min( m_height, m_height+sy );
+
+        for ( auto yin = starty,yout = std::size_t(0); yin<stopy; yin++, yout++ )
+            for ( auto xin = startx,xout = std::size_t(0); xin<stopx; xin++, xout++ )
+                output.at(xout,yout) = c_at(xin,yin);
+
+        return output;
+    }
+
     tinymage<T> get_columns(    std::size_t startx,
                                 std::size_t stopx ) const
     {
