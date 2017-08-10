@@ -30,12 +30,31 @@ THE SOFTWARE.
 
 #include <iostream>
 
+#ifdef __EMSCRIPTEN__
+    #define TINY_MODEL_PATH "./ocr/models/"
+#else
+    #define TINY_MODEL_PATH "../../data/ocr/models/"
+#endif
+
 // digit recognition helper class
 // -> extracts the digits zone on a uniform white background
 // -> uses cnn to infer the digits
 class tinydigit
 {
 public:
+
+    enum class model
+    {
+        kaggle,
+        caffe
+    };
+
+    struct model_infos
+    {
+        size_t input_size = 28;
+        float input_min_range = 0.f;
+        float input_max_range = 1.f;
+    };
 
     struct reco
     {
@@ -45,13 +64,19 @@ public:
     };
 
 public:
-    tinydigit()
+    tinydigit( model m = model::kaggle )
     {
-#ifdef __EMSCRIPTEN__
-        m_net_manager.load( "./ocr/models/kaggle-mnist-model" );
-#else
-        m_net_manager.load( "../../data/ocr/models/kaggle-mnist-model" );
-#endif
+        switch( m )
+        {
+        case model::kaggle:
+            m_net_manager.load( std::string(TINY_MODEL_PATH) + "kaggle-mnist-model" );
+            m_model_infos = { 32, -1.f, 1.f };
+            break;
+        case model::caffe:
+            m_net_manager.load( std::string(TINY_MODEL_PATH) + "caffe-mnist-model" );
+            m_model_infos = { 28, 0.f, 1.f };
+            break;
+        }
     }
 
     void process( const tinymage<float>& img )
@@ -83,8 +108,8 @@ public:
             _center_number( cropped_number );
 
             // convert imagefile to vec_t
-            cropped_number.canvas_resize( 32, 32 );
-            cropped_number.normalize( -1.f, 1.f );
+            cropped_number.canvas_resize( m_model_infos.input_size, m_model_infos.input_size );
+            cropped_number.normalize( m_model_infos.input_min_range, m_model_infos.input_max_range );
 
             std::cout << "tinydigit::process - computing augmented output" << std::endl;
 
@@ -134,7 +159,7 @@ private:
         for ( const auto& rot : rotations )
         {
             // rotate and predict
-            auto rotated = img.get_rotate( rot, -1.f );
+            auto rotated = img.get_rotate( rot, m_model_infos.input_min_range );
             //rotated.display();
             vec_res.emplace_back(
                 m_net_manager.predict( tiny_dnn::vec_t( rotated.data(), rotated.data() + rotated.size() ) )
@@ -380,6 +405,8 @@ private:
     }
 
 private:
+
+    model_infos m_model_infos = {};
 
     static constexpr auto g_min_digit_thickness = 1.f; // TODO-AM compute smartly??
 
