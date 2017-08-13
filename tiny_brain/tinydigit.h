@@ -135,8 +135,6 @@ public:
         return m_cropped_numbers;
     }
 
-public:
-
     const std::vector<reco>& recognitions() { return m_recognitions; }
 
     std::string reco_string()
@@ -164,8 +162,13 @@ private:
             vec_res.emplace_back(
                 m_net_manager.predict( tiny_dnn::vec_t( rotated.data(), rotated.data() + rotated.size() ) )
             );
-            //std::cout << "network_manager::compute_augmented_output - " <<
-            //    *std::max_element( vec_res.back().begin(), vec_res.back().end() ) << std::endl;
+
+    		/*const auto& last = vec_res.back();
+    		auto max_score = std::max_element( last.begin(), last.end() );
+    		auto max_index = static_cast<std::size_t>( std::distance( last.begin(), max_score ) );
+    		auto max_score_val = *max_score;
+            std::cout << "network_manager::compute_augmented_output - " <<
+                   max_score_val << " " << max_index << std::endl;*/
         }
 
         // TODO : computing a mean image would also makes sense!
