@@ -133,7 +133,7 @@ static void usage( const char *argv0 )
 int main( int argc, char **argv )
 {
     std::string data_path        = "";
-    int epochs                   = 5;
+    int epochs                   = 3;
     int minibatch_size           = 128;
     core::backend_t backend_type = core::default_engine();
 

@@ -37,10 +37,7 @@ THE SOFTWARE.
     #define TINY_MODEL_PATH "../../data/ocr/models/"
 #endif
 
-// digit recognition helper class
-// -> extracts the digits zone on a uniform white background
-// -> uses cnn to infer the digits
-class tinydigit
+class tinydigit_base
 {
 public:
 
@@ -63,7 +60,16 @@ public:
         size_t value;
         float confidence;
     };
+};
 
+// digit recognition helper class
+// -> extracts the digits zone on a uniform white background
+// -> uses cnn to infer the digits
+template<   size_t R = 0,   // rotation data augmentation amplitude from -R to R
+            size_t SX = 0,  // x shift data augmentation amplitude from -SX to SX
+            size_t SY = 0>  // y shift data augmentation amplitude from -SY to SY
+class tinydigit : public tinydigit_base
+{
 public:
     tinydigit( model m = model::kaggle )
     {
@@ -162,9 +168,10 @@ private:
 
     best_digit_infos _compute_augmented_output( tinymage<float>& img )
     {
-        // ONLY ROTATION AUGMENTATION IS IMPLEMENTED YET
-        //{ -5.f, -4.f, -3.f, -2.f, -1.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f }
-        constexpr auto rotations = tinyutils::make_symetric_sequence<5>();
+        // ONLY ROTATION AND SHIFTING AUGMENTATION ARE IMPLEMENTED YET
+        constexpr auto rotations = tinyutils::make_symetric_sequence<R>();
+        constexpr auto x_shifts = tinyutils::make_symetric_sequence<SX>();
+        constexpr auto y_shifts = tinyutils::make_symetric_sequence<SY>();
 
         std::vector<tiny_dnn::vec_t> vec_res;
 
@@ -173,13 +180,26 @@ private:
             // rotate and predict
             auto rotated = img.get_rotate( rot, m_model_infos.input_min_range );
             //rotated.display();
-            vec_res.emplace_back(
-                m_net_manager.predict( tiny_dnn::vec_t( rotated.data(), rotated.data() + rotated.size() ) )
-            );
 
-    			/*const auto best_digit = _get_best_digit( vec_res.back() );
-            std::cout << "network_manager::compute_augmented_output - rot" <<
-                rot << " score " << best_digit.score << " @" << best_digit.index << std::endl;*/
+            for ( const auto& xshift : x_shifts )
+            {
+                auto xshifted = rotated.get_shift( xshift, 0 );
+                //xshifted.display();
+
+                for ( const auto& yshift : y_shifts )
+                {
+                    auto yshifted = xshifted.get_shift( 0, yshift );
+                    //yshifted.display();
+
+            		vec_res.emplace_back(
+                		m_net_manager.predict( tiny_dnn::vec_t( yshifted.data(), yshifted.data() + yshifted.size() ) )
+            		);
+
+    				//const auto best_digit = _get_best_digit( vec_res.back() );
+            		//std::cout << "network_manager::compute_augmented_output - rot" <<
+                	//	rot << " shift" << xshift << "/" << yshift << " score " << best_digit.score << " @" << best_digit.index << std::endl;
+                }
+            }
         }
 
         // TODO : computing a mean image would also makes sense!

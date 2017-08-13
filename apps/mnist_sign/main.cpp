@@ -119,7 +119,7 @@ private:
 	tinymage<float> m_img;
 
     tinysign m_sign_helper;
-	tinydigit m_digit_ocr_helper;
+	tinydigit<4,0,0> m_digit_ocr_helper;
 };
 
 // Binding code
@@ -173,7 +173,7 @@ int main( int argc, char **argv )
 
 	const auto& warped = m_sign_helper.get_sign_warp();
 
-	tinydigit digit_ocr_helper( tinydigit::model::kaggle );
+	tinydigit<4,0,0> digit_ocr_helper( tinydigit_base::model::caffe );
 	digit_ocr_helper.process( warped );
 
     auto& cropped_numbers = digit_ocr_helper.cropped_numbers();

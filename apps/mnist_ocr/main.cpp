@@ -30,7 +30,7 @@ int main( int argc, char **argv )
     img.load( "../../data/ocr/images/123456.png" );
     img.display();
 
-    tinydigit digit_ocr( tinydigit::model::kaggle );
+    tinydigit<0,2,2> digit_ocr( tinydigit_base::model::kaggle );
     digit_ocr.process( img );
 
     auto& cropped_numbers = digit_ocr.cropped_numbers();
