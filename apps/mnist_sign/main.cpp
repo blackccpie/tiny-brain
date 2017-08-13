@@ -173,7 +173,7 @@ int main( int argc, char **argv )
 
 	const auto& warped = m_sign_helper.get_sign_warp();
 
-	tinydigit digit_ocr_helper;
+	tinydigit digit_ocr_helper( tinydigit::model::kaggle );
 	digit_ocr_helper.process( warped );
 
     auto& cropped_numbers = digit_ocr_helper.cropped_numbers();
