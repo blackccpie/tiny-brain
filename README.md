@@ -7,6 +7,8 @@
 
 After spending more than a year working on a from scratch deep learning C++ stack ([neurocl](http://github.com/blackccpie/neurocl)), I decided to switch my experiments to use a more established C++ framework, that is [tiny-dnn](https://github.com/tiny-dnn/tiny-dnn).
 
+tiny-brain is **C++14** compliant.
+
 | **`Linux`** |
 |-------------|
 |[![Build Status](https://travis-ci.org/blackccpie/tiny-brain.svg?branch=master)](https://travis-ci.org/blackccpie/tiny-brain)|

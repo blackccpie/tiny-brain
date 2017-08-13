@@ -25,6 +25,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "tiny_brain/tinymage.h"
+#include "tiny_brain/tinyutils.h"
 
 #include "tiny_dnn/tiny_dnn.h"
 
@@ -114,15 +115,11 @@ public:
             std::cout << "tinydigit::process - computing augmented output" << std::endl;
 
 			// recognize using data augmentation
-            auto res = _compute_augmented_output( cropped_number );
+            const auto best_digit = _compute_augmented_output( cropped_number );
 
-            auto max_score = std::max_element( res.begin(), res.end() );
-            auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score ) );
-            auto max_score_val = *max_score;
+            std::cout << "tinydigit::process - max comp idx: " << best_digit.index << " max comp val: " << best_digit.score << std::endl;
 
-            std::cout << "tinydigit::process - max comp idx: " << max_index << " max comp val: " << max_score_val << std::endl;
-
-            m_recognitions.emplace_back( reco{ ni.first, max_index, 100.f * max_score_val } );
+            m_recognitions.emplace_back( reco{ ni.first, best_digit.index, 100.f * best_digit.score } );
 
         	//cropped_number.display();
         }
@@ -147,10 +144,27 @@ public:
 
 private:
 
-    tiny_dnn::vec_t _compute_augmented_output( tinymage<float>& img )
+    struct best_digit_infos
+    {
+        float score = 0.f;
+        size_t index = 0;
+    };
+
+private:
+
+    inline best_digit_infos _get_best_digit( const tiny_dnn::vec_t& res )
+    {
+        auto max_score_elem = std::max_element( res.begin(), res.end() );
+        auto max_index = static_cast<std::size_t>( std::distance( res.begin(), max_score_elem ) );
+
+        return { *max_score_elem, max_index };
+    }
+
+    best_digit_infos _compute_augmented_output( tinymage<float>& img )
     {
         // ONLY ROTATION AUGMENTATION IS IMPLEMENTED YET
-        std::array<float,11> rotations{ { -5.f, -4.f, -3.f, -2.f, -1.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f } };
+        //{ -5.f, -4.f, -3.f, -2.f, -1.f, 0.f, 1.f, 2.f, 3.f, 4.f, 5.f }
+        constexpr auto rotations = tinyutils::make_symetric_sequence<5>();
 
         std::vector<tiny_dnn::vec_t> vec_res;
 
@@ -163,12 +177,9 @@ private:
                 m_net_manager.predict( tiny_dnn::vec_t( rotated.data(), rotated.data() + rotated.size() ) )
             );
 
-    		/*const auto& last = vec_res.back();
-    		auto max_score = std::max_element( last.begin(), last.end() );
-    		auto max_index = static_cast<std::size_t>( std::distance( last.begin(), max_score ) );
-    		auto max_score_val = *max_score;
-            std::cout << "network_manager::compute_augmented_output - " <<
-                   max_score_val << " " << max_index << std::endl;*/
+    			/*const auto best_digit = _get_best_digit( vec_res.back() );
+            std::cout << "network_manager::compute_augmented_output - rot" <<
+                rot << " score " << best_digit.score << " @" << best_digit.index << std::endl;*/
         }
 
         // TODO : computing a mean image would also makes sense!
@@ -179,14 +190,10 @@ private:
             return max_score_b < max_score_a;
         });
 
-        const auto& best = vec_res.front();
+        const auto best_digit = _get_best_digit( vec_res.front() );
+        std::cout << "network_manager::compute_augmented_output - best score " << best_digit.score << " @" << best_digit.index << std::endl;
 
-        auto max_score = std::max_element( best.begin(), best.end() );
-        auto max_index = static_cast<std::size_t>( std::distance( best.begin(), max_score ) );
-        auto max_score_val = *max_score;
-        std::cout << "network_manager::compute_augmented_output - " << max_score_val << " " << max_index << std::endl;
-
-        return best;
+        return best_digit;
     }
 
     tinymage<float> _get_cropped_numbers( const tinymage<float>& input )
