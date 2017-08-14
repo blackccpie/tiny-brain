@@ -73,17 +73,29 @@ class tinydigit : public tinydigit_base
 public:
     tinydigit( model m = model::kaggle )
     {
-        switch( m )
+        std::cout << "tinydigit::tinydigit - loading models in path : " << TINY_MODEL_PATH << std::endl;
+
+        try
         {
-        case model::kaggle:
-            m_net_manager.load( std::string(TINY_MODEL_PATH) + "kaggle-mnist-model" );
-            m_model_infos = { 32, -1.f, 1.f };
-            break;
-        case model::caffe:
-            m_net_manager.load( std::string(TINY_MODEL_PATH) + "caffe-mnist-model" );
-            m_model_infos = { 28, 0.f, 1.f };
-            break;
+        	switch( m )
+        	{
+        	case model::kaggle:
+            	m_net_manager.load( std::string(TINY_MODEL_PATH) + "kaggle-mnist-model" );
+            	m_model_infos = { 32, -1.f, 1.f };
+            	break;
+        	case model::caffe:
+            	m_net_manager.load( std::string(TINY_MODEL_PATH) + "caffe-mnist-model" );
+            	m_model_infos = { 28, 0.f, 1.f };
+            	break;
+        	}
         }
+        catch( tiny_dnn::nn_error& e )
+        {
+            std::cerr << "tinydigit::tinydigit - error trying to load model : " << e.what() << std::endl;
+            throw;
+        }
+
+        std::cout << "tinydigit::tinydigit - model successfully loaded" << std::endl;
     }
 
     void process( const tinymage<float>& img )
