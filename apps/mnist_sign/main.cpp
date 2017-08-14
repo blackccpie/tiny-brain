@@ -39,8 +39,11 @@ THE SOFTWARE.
 class digits_sign_detector
 {
 public:
-    digits_sign_detector( size_t sx, size_t sy ) : m_img( sx, sy ), m_sign_helper( sx, sy )
-        { std::cout << "digits_sign_detector::digits_sign_detector - " << sx << "x" << sy << std::endl; }
+    digits_sign_detector( size_t sx, size_t sy )
+		: m_img( sx, sy ), m_sign_helper( sx, sy ), m_digit_ocr_helper( tinydigit_base::model::caffe )
+    {
+		std::cout << "digits_sign_detector::digits_sign_detector - " << sx << "x" << sy << std::endl;
+	}
 
 	/************************ LOCATE ************************/
 

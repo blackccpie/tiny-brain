@@ -32,7 +32,7 @@ using namespace emscripten;
 class ocr_wrapper::ocr_wrapper_impl
 {
 public:
-    ocr_wrapper_impl() {}
+    ocr_wrapper_impl() : m_digit_ocr( tinydigit_base::model::kaggle ) {}
     void process( const tinymage<float>& img )
     {
         m_digit_ocr.process( img );
@@ -46,7 +46,7 @@ public:
         return m_digit_ocr.reco_string();
     }
 private:
-    tinydigit m_digit_ocr;
+    tinydigit<0,2,2> m_digit_ocr;
 };
 
 ocr_wrapper::ocr_wrapper()
