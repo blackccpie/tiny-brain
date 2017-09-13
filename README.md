@@ -29,3 +29,7 @@ Full-webassemby mnist digit recognition demo can be viewed online here:
 [Digits localization and recognition on white background](http://blackccpie.free.fr/ocr/)
 
 [Digits sign localization, extraction, warping and recognition  (in progress...3/4 correct guesses)](http://blackccpie.free.fr/sign/)
+
+****Status****
+
+Development is on hiatus, while facing some emscripten compilation issue related to [#855](https://github.com/tiny-dnn/tiny-dnn/pull/855) and functional issues related to [#857](https://github.com/tiny-dnn/tiny-dnn/issues/857). Hope these two will be fixed soon.
