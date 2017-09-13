@@ -7,6 +7,9 @@
 
 After spending more than a year working on a from scratch deep learning C++ stack ([neurocl](http://github.com/blackccpie/neurocl)), I decided to switch my experiments to use a more established C++ framework, that is [tiny-dnn](https://github.com/tiny-dnn/tiny-dnn).
 
+tiny-brain additional image processing is implemented in header only [tinymage](https://github.com/blackccpie/tiny-brain/blob/master/tiny_brain/tinymage.h) class, which is based on std::vector private inheritance, and allows some basic image processing (thresholding, resizing, rotating, cropping, computing row/column sum images...).
+Some more task specific processing is implemented in header only classes [tinydigit](https://github.com/blackccpie/tiny-brain/blob/master/tiny_brain/tinydigit.h) and [tinysign](https://github.com/blackccpie/tiny-brain/blob/master/tiny_brain/tinysign.h), respectively dedicated to digits recognition and digits sign extraction (from a rich scene).
+
 tiny-brain is **C++14** compliant.
 
 | **`Linux`** |
