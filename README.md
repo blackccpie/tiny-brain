@@ -35,4 +35,4 @@ Full-webassemby mnist digit recognition demo can be viewed online here:
 
 ****Status****
 
-Development is on hiatus, while facing some emscripten compilation issue related to [#855](https://github.com/tiny-dnn/tiny-dnn/pull/855) and functional issues related to [#857](https://github.com/tiny-dnn/tiny-dnn/issues/857). Hope these two will be fixed soon.
+Development is on hiatus while facing some functional issues related to [#857](https://github.com/tiny-dnn/tiny-dnn/issues/857). Hope this one will be fixed soon.
